@@ -16,7 +16,6 @@ public class GGJCartridge : BasicGameCartridge
     public override CartridgeConfig CartridgeConfig { get; } = new(new Point(1920, 1080));
     public override void OnCartridgeStarted()
     {
-        Client.Debug.Log("Awakened");
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
@@ -41,7 +40,6 @@ public class GGJCartridge : BasicGameCartridge
 
     public override IEnumerable<ILoadEvent> LoadEvents(Painter painter)
     {
-        Client.Debug.Log("Load");
         yield break;
     }
 
