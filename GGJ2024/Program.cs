@@ -10,4 +10,6 @@ var config = new WindowConfigWritable
     Title = "NotExplosive.net"
 };
 
-Bootstrap.Run(args, new WindowConfig(config), runtime => new HotReloadCartridge(runtime, new GGJCartridge(runtime)));
+Bootstrap.Run(args, new WindowConfig(config), runtime => new HotReloadCartridge(runtime, 
+    new GGJCartridge(runtime)
+    ));

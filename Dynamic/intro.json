@@ -1,0 +1,156 @@
+{
+    "Dialogue": [
+        /*
+        {
+            "Animation": "Wake"
+        },
+        {
+            "Animation": "None",
+            "Duration": 1
+        },
+        {
+            "Animation": "Sleepy"
+        },
+        {
+            "Animation": "Blink"
+        },
+        {
+            "Animation": "Shocked",
+            "Duration": 0.25
+        },
+        {
+            "Animation": "None",
+            "Duration": 0.5
+        },
+        {
+            "Animation": "Idle",
+            "Duration": 1
+        },
+        */
+        {
+            "Text": "Hi there!",
+            "Animation": "Happy"
+        },
+        {
+            "Text": "Sorry... I didn't see you come in.",
+            "Animation": "Sad",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            },
+        },
+        {
+            "Text": "You're a [color(ff8000)]Player[/color], right?",
+            "Animation": "Idle",
+            "Tilt": -0.3,
+            "Position": {
+                "x": 0.4,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "Cool!",
+            "Animation": "Happy",
+            "Position": {
+                "x": 0.6,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "Blink"
+        },
+        {
+            "Text": "You're probably waiting for the game to start, huh?",
+            "Animation": "Sad"
+        },
+        {
+            "Text": "Well uhh...",
+            "Animation": "Sad",
+            "Tilt": 0.25,
+            "Position": {
+                "x": 0.3,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "The thing is...",
+            "Animation": "Sad",
+            "Tilt": -0.25,
+            "Position": {
+                "x": 0.7,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "There isn't one.",
+            "Animation": "Sad",
+            "Tilt": 0
+        },
+        {
+            "Animation": "Blink",
+            "Tilt": 0
+        },
+        {
+            "Text": "That's not right.",
+            "Animation": "Sad",
+            "Tilt": 0.25,
+            "Position": {
+                "x": 0.45,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "I'm a video game...",
+            "Animation": "Morose",
+            "Position": {
+                "x": 0.4,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "I have to entertain [color(ff8000)]you[/color].",
+            "Animation": "Sad",
+            "Tilt": 0.25,
+            "Position": {
+                "x": 0.35,
+                "y": 0.5
+            },
+        },
+        {
+            "Text": "So I'll do my best!",
+            "Animation": "Mad",
+            "Position": {
+                "x": 0.5,
+                "y": 0.55
+            },
+            "Tilt": 0
+        },
+        {
+            "Text": "OK, let's try this",
+            "Animation": "Happy",
+            "Tilt": 0
+        },
+        {
+            "Animation": "Blink",
+            "Tilt": 0
+        },
+        {
+            "Animation": "Mad",
+            "Tilt": 0
+        },
+        {
+            "Text": "My Game... starting... now!",
+            "Animation": "Focused",
+            "Duration": 3,
+            "Tilt": 0
+        },
+        {
+            "Animation": "Focused",
+            "Duration": 2,
+            "Position": {
+                "x": 0.5,
+                "y": -1
+            }
+        },
+    ]
+}
