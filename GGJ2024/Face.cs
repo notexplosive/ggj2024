@@ -227,7 +227,11 @@ public class Face : IDrawHook, IUpdateHook
         {
             return new MultiplexTween()
                     .AddChannel(_browTilt.TweenTo(0.5f, duration, Ease.CubicFastSlow))
-                    .AddChannel(RadiusFactor.TweenTo(0.5f, duration, Ease.CubicFastSlow))
+                    .AddChannel(
+                        new SequenceTween()
+                            .Add(RadiusFactor.TweenTo(0.8f, duration/2f, Ease.CubicFastSlow))
+                            .Add(RadiusFactor.TweenTo(1f, duration/2f, Ease.CubicSlowFast))
+                        )
                     .AddChannel(_openAmount.TweenTo(1.5f, duration, Ease.CubicFastSlow))
                     .AddChannel(_lowerOpen.TweenTo(1f, duration, Ease.CubicFastSlow))
                 ;
