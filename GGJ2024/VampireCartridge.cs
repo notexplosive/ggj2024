@@ -154,11 +154,14 @@ public class VampireCartridge : BasicGameCartridge
 
     public override void Update(float dt)
     {
-        _elapsedTime += dt;
         if (!Runtime.Window.IsInFocus)
         {
             return;
         }
+        
+        _elapsedTime += dt;
+
+        UpdateAllHurtTimers(dt);
         
         if(_gameOver)
         {
@@ -199,6 +202,17 @@ public class VampireCartridge : BasicGameCartridge
         ConstrainAllEntitiesToLevel();
         MoveThingsAlongVelocity(dt);
         KillDeadThings();
+    }
+
+    private void UpdateAllHurtTimers(float dt)
+    {
+        for (var i = 0; i < _world.Entities.Length; i++)
+        {
+            if (_world.Entities[i].IsActive && _world.Entities[i].HurtTimer > 0)
+            {
+                _world.Entities[i].HurtTimer -= dt;
+            }
+        }
     }
 
     private void EnemyJeers()
@@ -248,7 +262,7 @@ public class VampireCartridge : BasicGameCartridge
             var edges = new[] {RectEdge.Left, RectEdge.Right, RectEdge.Bottom, RectEdge.Top};
 
             // todo: waves
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 5; i++)
             {
                 var edge = Client.Random.Clean.GetRandomElement(edges);
                 var point = VampireCartridge.GetRandomPointAlongEdge(_camera.ViewBounds.Inflated(64, 64), edge);
@@ -325,6 +339,7 @@ public class VampireCartridge : BasicGameCartridge
                 {
                     _world.DestroyBullet(bulletIndex);
                     _world.Entities[foundEntity].Health -= bullet.HitDamage;
+                    _world.Entities[foundEntity].HurtTimer = 0.15f;
                 }
             }
         }
@@ -506,6 +521,11 @@ public class VampireCartridge : BasicGameCartridge
             if (entity.IsActive)
             {
                 var bodyColor = Color.White;
+
+                if (entity.HurtTimer > 0)
+                {
+                    bodyColor = Color.Red.BrightenedBy(0.5f);
+                }
 
                 if (entity.HasTag(Tag.Player))
                 {

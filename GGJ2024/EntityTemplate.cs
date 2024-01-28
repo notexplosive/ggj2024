@@ -24,7 +24,8 @@ public class EntityTemplate
             CollideRadius = 64,
             Speed = 4,
             Tags = Tag.Enemy | Tag.Solid,
-            Sprite = "game/skeleton"
+            Sprite = "game/skeleton",
+            MaxHealth = 2
         };
     }
     

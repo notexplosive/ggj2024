@@ -23,6 +23,7 @@ public struct Entity
     public int Health { get; set; } = 1;
     public int MaxHealth { get; set; } = 1;
     public int HitDamage { get; set; } = 1;
+    public float HurtTimer { get; set; } = 0f;
 
     [Pure]
     public bool HasTag(Tag tag)
