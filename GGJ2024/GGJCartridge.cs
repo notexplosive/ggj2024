@@ -60,6 +60,8 @@ public class GGJCartridge : BasicGameCartridge
 
         // initialize first frame
         _tween.Update(0);
+        
+        MusicPlayer.FadeOut();
     }
 
     private void RunPage(DialogueLine line)

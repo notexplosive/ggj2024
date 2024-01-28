@@ -35,6 +35,7 @@ public class VampireCartridge : BasicGameCartridge
     private bool _playerShouldFlicker;
     private Upgrades? _upgrades;
     private readonly EnemyWaves _waves;
+    private float _freezeTimer;
 
     // ReSharper disable once InconsistentNaming
     private bool StoryBeat_NoEnemies => _hostRuntime.HostCartridge.StoryProgress == 0;
@@ -211,6 +212,12 @@ public class VampireCartridge : BasicGameCartridge
             return;
         }
 
+        if (_freezeTimer > 0)
+        {
+            _freezeTimer -= dt;
+            return;
+        }
+
         _elapsedTime += dt;
 
         _dash.Update(dt);
@@ -306,6 +313,7 @@ public class VampireCartridge : BasicGameCartridge
                 if (_world.IsColliding(player.Position, player.HurtRadius, entity.Position, entity.CollideRadius))
                 {
                     _playerHitCooldown = 1.25f;
+                    _freezeTimer = 0.1f;
                     _world.Entities[playerIndex].Health--;
                     break;
                 }
