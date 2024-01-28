@@ -452,9 +452,15 @@ public class VampireCartridge : BasicGameCartridge
     private void MovePlayer(float dt)
     {
         _playerMoveTimer += dt;
+        
+        
         if (MathUtils.IsVerySmall(_playerMoveVector))
         {
             _playerMoveDampen = Math.Max(0, _playerMoveDampen - dt * 4);
+        } 
+        else if (_dash.IsDashing)
+        {
+            _playerMoveDampen = 0f;
         }
         else
         {
@@ -462,6 +468,17 @@ public class VampireCartridge : BasicGameCartridge
         }
 
         var playerIndex = _world.GetPlayerIndex();
+        
+        if (_playerMoveVector.X < 0)
+        {
+            _world.Entities[playerIndex].FlipX = true;
+        }
+        
+        if (_playerMoveVector.X > 0)
+        {
+            _world.Entities[playerIndex].FlipX = false;
+        }
+
 
         var speed = _world.Entities[playerIndex].Speed;
 
@@ -604,16 +621,18 @@ public class VampireCartridge : BasicGameCartridge
                     {
                         Texture2D texture;
 
-                        if (MathUtils.IsVerySmall(_playerMoveVector) || _playerMoveVector.X == 0)
+                        if (MathUtils.IsVerySmall(_playerMoveVector))
                         {
                             texture = Client.Assets.GetTexture("game/person");
+                        }
+                        else if (_dash.IsDashing)
+                        {
+                            texture = Client.Assets.GetTexture("game/sprint");
                         }
                         else
                         {
                             texture = Client.Assets.GetTexture("game/walk");
                         }
-
-                        var flipX = _playerMoveVector.X < 0;
 
                         if (_playerHitCooldown > 0)
                         {
@@ -664,13 +683,19 @@ public class VampireCartridge : BasicGameCartridge
                             }
                         }
 
+                        var angle = MathF.Sin(_playerMoveTimer * 30f) * _playerMoveDampen / 5;
+                        if(_dash.IsDashing)
+                        {
+                            angle = _playerMoveVector.X * _dash.Speed / 60f;
+                        }
+
                         painter.DrawAtPosition(texture, entity.Position + new Vector2(0, texture.Height / 2f * scale),
                             new Scale2D(scale),
                             new DrawSettings
                             {
-                                Flip = new XyBool(flipX, false),
+                                Flip = new XyBool(entity.FlipX, false),
                                 Origin = new DrawOrigin(new Vector2(texture.Width / 2f, texture.Height)),
-                                Angle = MathF.Sin(_playerMoveTimer * 30f) * _playerMoveDampen / 5,
+                                Angle = angle,
                                 Color = bodyColor.WithMultipliedOpacity(flickerOpacity)
                             });
                     }

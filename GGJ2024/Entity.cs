@@ -24,6 +24,7 @@ public struct Entity
     public int MaxHealth { get; set; } = 1;
     public int HitDamage { get; set; } = 1;
     public float HurtTimer { get; set; } = 0f;
+    public bool FlipX { get; set; } = default;
 
     [Pure]
     public bool HasTag(Tag tag)
