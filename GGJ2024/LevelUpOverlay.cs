@@ -108,6 +108,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
 
     private void Hide()
     {
+        MusicPlayer.FadeToMain();
         _tween.Clear();
         _tween.Add(new MultiplexTween()
             .AddChannel(_titleActivePercent.TweenTo(-1, 0.5f, Ease.CubicFastSlow))
@@ -125,6 +126,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         _titleActivePercent.Value = 1f;
         _buttonActivePercent.Value = 1f;
         _tween.Clear();
+        MusicPlayer.FadeToMenu();
         _tween.Add(_titleActivePercent.TweenTo(0, 0.5f, Ease.CubicFastSlow));
         _tween.Add(_buttonActivePercent.TweenTo(0, 0.5f, Ease.CubicFastSlow));
     }
@@ -172,7 +174,6 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
 
     private void DrawButton(Painter painter, RectangleF button, bool isHovered)
     {
-
         if (isHovered)
         {
             button = button.Inflated(10, 10);

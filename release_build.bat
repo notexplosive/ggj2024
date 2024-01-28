@@ -5,6 +5,8 @@ rd /Q /S .\.build
 :: Build GGJ2024
 neato monogame-release-build .\GGJ2024\GGJ2024.csproj ".build"
 
+xcopy "./Dynamic" ".build/Dynamic" /S /I
+
 :: Delete pdb files
 powershell -command "ls .build | where name -like *.pdb | remove-item"
 

@@ -5,7 +5,6 @@ using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Cartridges;
 using ExplogineMonoGame.Data;
-using ExplogineMonoGame.Gui;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -19,11 +18,11 @@ public class VampireCartridge : BasicGameCartridge
     private readonly World _world;
     private readonly RectangleF _worldBounds;
     private bool _gameOver;
+    private LevelUpOverlay? _levelUpScreen;
     private float _playerMoveDampen;
     private float _playerMoveTimer;
     private Vector2 _playerMoveVector;
     private float _spawnWaveTimer;
-    private LevelUpOverlay? _levelUpScreen;
 
     public VampireCartridge(IRuntime runtime) : base(runtime)
     {
@@ -38,12 +37,6 @@ public class VampireCartridge : BasicGameCartridge
 
         _world.SpawnEntity(EntityTemplate.Player, new SpawnParameters());
 
-        _world.SpawnEntity(EntityTemplate.Enemy, new SpawnParameters());
-        _world.SpawnEntity(EntityTemplate.Enemy, new SpawnParameters());
-        _world.SpawnEntity(EntityTemplate.Enemy, new SpawnParameters());
-        _world.SpawnEntity(EntityTemplate.Enemy, new SpawnParameters());
-        _world.SpawnEntity(EntityTemplate.BigEnemy, new SpawnParameters());
-
         _playerAbilities.Add(new Sword());
     }
 
@@ -52,7 +45,7 @@ public class VampireCartridge : BasicGameCartridge
     public override void OnCartridgeStarted()
     {
         _levelUpScreen = new LevelUpOverlay(Runtime.Window.RenderResolution.ToRectangleF());
-        
+
         var decorationSpriteIndex = 0;
         var decorationSprites = new[]
         {
@@ -63,10 +56,10 @@ public class VampireCartridge : BasicGameCartridge
 
         var colors = new[]
         {
-            Color.Green.DimmedBy(0.5f),
+            Color.Green.DesaturatedBy(0.25f),
             Color.ForestGreen,
-            Color.LimeGreen.DimmedBy(0.25f),
-            Color.Lime.DimmedBy(0.25f)
+            Color.LimeGreen.DesaturatedBy(0.25f),
+            Color.Lime.DesaturatedBy(0.25f)
         };
 
         for (var i = 0; i < _decorations.Length; i++)
@@ -96,6 +89,8 @@ public class VampireCartridge : BasicGameCartridge
                     colors[decorationSpriteIndex % colors.Length],
                     rectangle);
         }
+        
+        MusicPlayer.FadeToMain();
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
@@ -105,9 +100,9 @@ public class VampireCartridge : BasicGameCartridge
             _levelUpScreen.UpdateInput(input, hitTestStack);
             return;
         }
-        
+
         var inputVector = InputCalculations.CalculateInputVector(input);
-        
+
         for (var i = 0; i < _world.Entities.Length; i++)
         {
             var entity = _world.Entities[i];
@@ -124,7 +119,7 @@ public class VampireCartridge : BasicGameCartridge
         {
             return;
         }
-        
+
         if (_levelUpScreen != null && _levelUpScreen.IsActive)
         {
             _levelUpScreen.Update(dt);
@@ -502,17 +497,18 @@ public class VampireCartridge : BasicGameCartridge
             new DrawSettings());
         painter.DrawRectangle(expBar, new DrawSettings {Color = Color.Yellow.DimmedBy(0.5f), Depth = Depth.Back});
 
-        var percent = _levelUpScreen.Percent();
+        var percent = _levelUpScreen?.Percent() ?? 0;
         var expFill = expBar.ResizedOnEdge(RectEdge.Right, new Vector2(-expBar.Width * (1 - percent), 0));
         painter.DrawRectangle(expFill, new DrawSettings {Color = Color.Yellow, Depth = Depth.Middle});
         painter.EndSpriteBatch();
-        
+
         if (_levelUpScreen != null && _levelUpScreen.IsActive)
         {
             painter.BeginSpriteBatch();
-            painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(), new DrawSettings{Color = Color.Black.WithMultipliedOpacity(0.75f)});
+            painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(),
+                new DrawSettings {Color = Color.Black.WithMultipliedOpacity(0.75f)});
             painter.EndSpriteBatch();
-            
+
             painter.BeginSpriteBatch();
             _levelUpScreen.Draw(painter);
             painter.EndSpriteBatch();

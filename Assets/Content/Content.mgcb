@@ -124,6 +124,12 @@
 #begin game/FredokaOne.ttf
 /copy:game/FredokaOne.ttf
 
+#begin game/game-theme.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/game-theme.ogg
+
 #begin game/goblin.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -171,6 +177,12 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:game/high-grass.png
+
+#begin game/menu-theme.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/menu-theme.ogg
 
 #begin game/minotaur.png
 /importer:TextureImporter
