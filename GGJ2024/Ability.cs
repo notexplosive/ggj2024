@@ -20,6 +20,34 @@ public abstract class Ability
     }
 
     public float Cooldown { get; set; } = 1f;
+    public float Range { get; set; } = 800;
 
     protected abstract bool Use(World world, Entity caster);
+    
+    protected Entity? FindEntity(World world, Entity caster)
+    {
+        Entity? foundEnemy = null;
+        foreach (var pendingEntity in world.Entities)
+        {
+            if (pendingEntity.HasTag(Tag.Enemy))
+            {
+                if (foundEnemy.HasValue)
+                {
+                    var currentDistance = (foundEnemy.Value.Position - caster.Position).LengthSquared();
+                    var newDistance = (pendingEntity.Position - caster.Position).LengthSquared();
+
+                    if (newDistance < currentDistance)
+                    {
+                        foundEnemy = pendingEntity;
+                    }
+                }
+                else
+                {
+                    foundEnemy = pendingEntity;
+                }
+            }
+        }
+
+        return foundEnemy;
+    }
 }
