@@ -19,8 +19,8 @@ public abstract class Ability
         }
     }
 
-    public float Cooldown { get; set; } = 1f;
-    public float Range { get; set; } = 800;
+    public float Cooldown { get; set; }
+    public float Range { get; set; }
 
     protected abstract bool Use(World world, Entity caster);
     

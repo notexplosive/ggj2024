@@ -14,6 +14,7 @@ public static class SpawnRunner
         {
             Position = spawnParameters.Position,
             Velocity = spawnParameters.Velocity,
+            HitDamage = spawnParameters.HitDamage ?? spawned.HitDamage,
             
             // Basics
             IsActive = true,

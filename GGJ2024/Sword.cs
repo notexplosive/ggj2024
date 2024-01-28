@@ -11,6 +11,7 @@ public class Sword : Ability
             world.SpawnBullet(EntityTemplate.SwordBullet,
                 new SpawnParameters
                 {
+                    HitDamage = Damage,
                     Position = caster.Position,
                     Velocity = MathUtils.CalculateDirectionalDisplacement(foundEnemy.Value.Position, caster.Position) * 30f
                 });
@@ -19,4 +20,6 @@ public class Sword : Ability
 
         return false;
     }
+
+    public int Damage { get; set; } = 1;
 }

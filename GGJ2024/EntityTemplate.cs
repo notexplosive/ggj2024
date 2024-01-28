@@ -11,7 +11,6 @@ public class EntityTemplate
             HurtRadius = 16,
             CollideRadius = 32,
             Speed = 8,
-            MaxHealth = 5,
             Tags = Tag.Player
         };
     }
@@ -25,7 +24,7 @@ public class EntityTemplate
             Speed = 4,
             Tags = Tag.Enemy | Tag.Solid,
             Sprite = "game/skeleton",
-            MaxHealth = 2
+            MaxHealth = 1
         };
     }
     

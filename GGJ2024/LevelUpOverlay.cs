@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
@@ -16,17 +17,20 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
     private readonly Font _descriptionFont;
     private readonly Font _headerFont;
     private readonly RectangleF _screen;
+    private readonly Upgrades _upgrades;
     private readonly Font _titleFont;
     private readonly TweenableFloat _buttonActivePercent = new(1f);
     private readonly TweenableFloat _titleActivePercent = new(1f);
     private readonly SequenceTween _tween = new();
     private List<HoverState> _hoverStates = new() { new HoverState(), new HoverState(), new HoverState() };
-    private int _expToNextLevel = 10;
+    private int _expToNextLevel = 5;
     private int _exp;
+    private List<LevelUpReward> _currentRewards = new();
 
-    public LevelUpOverlay(RectangleF screen)
+    public LevelUpOverlay(RectangleF screen, Upgrades upgrades)
     {
         _screen = screen;
+        _upgrades = upgrades;
 
         _headerFont = Client.Assets.GetFont("game/font", 200);
         _titleFont = Client.Assets.GetFont("game/font", 90);
@@ -49,7 +53,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         for (var i = 0; i < buttons.Count; i++)
         {
             var buttonRect = buttons[i];
-            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()), _hoverStates[i].IsHovered);
+            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()), _hoverStates[i].IsHovered, _currentRewards[i]);
         }
     }
 
@@ -60,10 +64,13 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
 
     public void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
-        if (Client.Debug.IsPassiveOrActive && input.Keyboard.GetButton(Keys.Escape, true).WasPressed)
+        if (Client.Debug.IsPassiveOrActive)
         {
-            // debug rest
-            Show();
+            if (input.Keyboard.GetButton(Keys.Q, true).WasPressed)
+            {
+                // debug rest
+                Show();
+            }
         }
 
         if (_tween.IsDone())
@@ -100,8 +107,8 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
 
     private void SelectUpgrade(int i)
     {
-        // apply upgrade
-        _expToNextLevel = (int) (_expToNextLevel * 1.5f);
+        _currentRewards[i].Buy();
+        _expToNextLevel = (int) (_expToNextLevel * 1.25f);
         _exp = 0;
         Hide();
     }
@@ -129,6 +136,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         MusicPlayer.FadeToMenu();
         _tween.Add(_titleActivePercent.TweenTo(0, 0.5f, Ease.CubicFastSlow));
         _tween.Add(_buttonActivePercent.TweenTo(0, 0.5f, Ease.CubicFastSlow));
+        _currentRewards = _upgrades.Pull(3).ToList();
     }
 
     public LayoutArrangement Layout()
@@ -172,7 +180,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         return root.Bake(rectangle);
     }
 
-    private void DrawButton(Painter painter, RectangleF button, bool isHovered)
+    private void DrawButton(Painter painter, RectangleF button, bool isHovered, LevelUpReward reward)
     {
         if (isHovered)
         {
@@ -185,9 +193,10 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         var iconArea = buttonLayout.FindElement("Icon");
         var descriptionArea = buttonLayout.FindElement("Description");
 
-        painter.DrawStringWithinRectangle(_titleFont, "Header", headerArea, Alignment.BottomCenter, new DrawSettings());
+        painter.DrawStringWithinRectangle(_titleFont, reward.Title, headerArea, Alignment.BottomCenter, new DrawSettings());
+        painter.DrawAsRectangle(Client.Assets.GetTexture(reward.IconName), iconArea, new DrawSettings());
         painter.DrawStringWithinRectangle(_descriptionFont,
-            "Lorem ipsum dolor sit amet sadg asdf dasdf waef awef awef awef.", descriptionArea, Alignment.TopCenter,
+            reward.Description, descriptionArea, Alignment.TopCenter,
             new DrawSettings());
     }
 

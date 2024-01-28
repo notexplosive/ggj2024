@@ -16,11 +16,16 @@ public class VampireCartridge : BasicGameCartridge
 {
     private readonly Camera _camera;
     private readonly Decoration[] _decorations;
+    private readonly HostRuntime _hostRuntime;
     private readonly SequenceTween _introTween = new();
     private readonly List<Ability> _playerAbilities = new();
+    private readonly Stats _stats;
     private readonly World _world;
     private readonly RectangleF _worldBounds;
+    private readonly TweenableFloat _barOffsetPercent = new(1f);
+    private readonly Dash _dash = new();
     private float _elapsedTime;
+    private readonly TweenableFloat _fadeOverlayOpacity = new(1f);
     private bool _gameOver;
     private LevelUpOverlay? _levelUpScreen;
     private float _playerHitCooldown;
@@ -29,10 +34,7 @@ public class VampireCartridge : BasicGameCartridge
     private Vector2 _playerMoveVector;
     private bool _playerShouldFlicker;
     private float _spawnWaveTimer = 2;
-    private readonly HostRuntime _hostRuntime;
-    private TweenableFloat _fadeOverlayOpacity = new(1f);
-    private TweenableFloat _barOffsetPercent = new(1f);
-    private Dash _dash = new();
+    private Upgrades? _upgrades;
 
     public VampireCartridge(HostRuntime runtime) : base(runtime)
     {
@@ -41,6 +43,7 @@ public class VampireCartridge : BasicGameCartridge
         _camera = new Camera(
             Runtime.Window.RenderResolution.ToRectangleF().Moved(-Runtime.Window.RenderResolution.ToVector2() / 2),
             Runtime.Window.RenderResolution);
+
         _decorations = new Decoration[64];
 
         var worldSize = _camera.ViewBounds.Size * 2f;
@@ -48,20 +51,23 @@ public class VampireCartridge : BasicGameCartridge
 
         _world.SpawnEntity(EntityTemplate.Player, new SpawnParameters());
 
-        _playerAbilities.Add(new Sword());
+        var sword = new Sword();
+        _playerAbilities.Add(sword);
+        _stats = new(_world, _dash, sword);
 
         var targetViewBounds = _camera.ViewBounds;
         _fadeOverlayOpacity.Value = 1f;
         _introTween
-            .Add(_camera.TweenableViewBounds.CallbackSetTo(_camera.ViewBounds.GetZoomedInBounds(500,_camera.ViewBounds.Center)))
+            .Add(_camera.TweenableViewBounds.CallbackSetTo(
+                _camera.ViewBounds.GetZoomedInBounds(500, _camera.ViewBounds.Center)))
             .Add(
                 new MultiplexTween()
                     .AddChannel(_camera.TweenableViewBounds.TweenTo(targetViewBounds, 1f, Ease.CubicFastSlow))
                     .AddChannel(
-                     new SequenceTween()
-                         .Add(new WaitSecondsTween(0.2f))
-                         .Add(_fadeOverlayOpacity.TweenTo(0f, 0.6f, Ease.Linear))
-                        )
+                        new SequenceTween()
+                            .Add(new WaitSecondsTween(0.2f))
+                            .Add(_fadeOverlayOpacity.TweenTo(0f, 0.6f, Ease.Linear))
+                    )
             )
             .Add(_barOffsetPercent.TweenTo(-0.05f, 0.25f, Ease.CubicFastSlow))
             .Add(_barOffsetPercent.TweenTo(0f, 0.15f, Ease.CubicSlowFast))
@@ -73,7 +79,8 @@ public class VampireCartridge : BasicGameCartridge
 
     public override void OnCartridgeStarted()
     {
-        _levelUpScreen = new LevelUpOverlay(Runtime.Window.RenderResolution.ToRectangleF());
+        _upgrades = new Upgrades(_stats);
+        _levelUpScreen = new LevelUpOverlay(Runtime.Window.RenderResolution.ToRectangleF(), _upgrades);
 
         var decorationSpriteIndex = 0;
         var decorationSprites = new[]
@@ -124,11 +131,22 @@ public class VampireCartridge : BasicGameCartridge
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
+        if (Client.Debug.IsPassiveOrActive)
+        {
+            if (input.Keyboard.GetButton(Keys.E, true).WasPressed)
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    _levelUpScreen?.IncrementExp();
+                }
+            }
+        }
+        
         if (!_introTween.IsDone())
         {
             return;
         }
-        
+
         if (input.Keyboard.GetButton(Keys.Escape).WasPressed)
         {
             _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
@@ -171,18 +189,18 @@ public class VampireCartridge : BasicGameCartridge
         {
             return;
         }
-        
+
         _elapsedTime += dt;
-        
+
         _dash.Update(dt);
 
         UpdateAllHurtTimers(dt);
-        
-        if(_gameOver)
+
+        if (_gameOver)
         {
             EnemyJeers();
         }
-        
+
         _introTween.Update(dt);
 
         if (!_introTween.IsDone())
@@ -448,7 +466,7 @@ public class VampireCartridge : BasicGameCartridge
         {
             speed = _dash.Speed;
         }
-        
+
         _world.Entities[playerIndex].Position += _playerMoveVector * speed * dt * 60;
     }
 
@@ -609,7 +627,8 @@ public class VampireCartridge : BasicGameCartridge
                             flickerOpacity = 0.25f;
                         }
 
-                        if(_introTween.IsDone()){
+                        if (_introTween.IsDone())
+                        {
                             // health bar
                             painter.DrawRectangle(
                                 new RectangleF(
@@ -622,15 +641,19 @@ public class VampireCartridge : BasicGameCartridge
                                 new RectangleF(
                                     entity.Position - new Vector2(texture.Width / 2f * scale,
                                         texture.Height / 2f * scale + 40),
-                                    new Vector2(texture.Width * scale * ((float) entity.Health / entity.MaxHealth), 20)),
+                                    new Vector2(texture.Width * scale * ((float) entity.Health / entity.MaxHealth),
+                                        20)),
                                 new DrawSettings {Color = Color.DarkRed, Depth = Depth.Back - 10});
-                            
+
                             // dash
                             painter.DrawRectangle(
                                 new RectangleF(
-                                    entity.Position - new Vector2(texture.Width / 2f * scale,
-                                        texture.Height / 2f * scale + 40),
-                                    new Vector2(texture.Width * scale * Math.Min(1,1 - _dash.CurrentCooldown / _dash.TotalCooldown), 10)).Moved(new Vector2(0,20)),
+                                        entity.Position - new Vector2(texture.Width / 2f * scale,
+                                            texture.Height / 2f * scale + 40),
+                                        new Vector2(
+                                            texture.Width * scale * Math.Min(1,
+                                                1 - _dash.CurrentCooldown / _dash.TotalCooldown), 10))
+                                    .Moved(new Vector2(0, 20)),
                                 new DrawSettings {Color = Color.LightBlue, Depth = Depth.Back - 10});
                         }
 
@@ -722,12 +745,13 @@ public class VampireCartridge : BasicGameCartridge
                 painter.EndSpriteBatch();
             }
         }
-        
+
         painter.BeginSpriteBatch();
-        painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(), new DrawSettings{Color = Color.Black.WithMultipliedOpacity(_fadeOverlayOpacity)});
+        painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(),
+            new DrawSettings {Color = Color.Black.WithMultipliedOpacity(_fadeOverlayOpacity)});
         painter.EndSpriteBatch();
-        
-        if(_gameOver)
+
+        if (_gameOver)
         {
             painter.BeginSpriteBatch();
             painter.DrawStringWithinRectangle(bigFont, "GAME OVER", Runtime.Window.RenderResolution.ToRectangleF(),
@@ -741,7 +765,6 @@ public class VampireCartridge : BasicGameCartridge
                 });
             painter.EndSpriteBatch();
         }
-        
     }
 
     public override void AddCommandLineParameters(CommandLineParametersWriter parameters)

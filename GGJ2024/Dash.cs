@@ -4,10 +4,10 @@ namespace GGJ2024;
 
 public class Dash
 {
-    public float MaxSpeed { get; private set; } = 20;
+    public float MaxSpeed { get; set; }
     public float Speed => _tweenableSpeed;
     public float CurrentCooldown { get; private set; }
-    public float TotalCooldown { get; private set; } = 1;
+    public float TotalCooldown { get; set; }
     public float Duration { get; private set; } = 0.25f;
     public bool IsDashing => !_tween.IsDone();
     private TweenableFloat _tweenableSpeed = new TweenableFloat(0);
