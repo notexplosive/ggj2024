@@ -27,6 +27,7 @@ public class VampireCartridge : BasicGameCartridge
     private readonly Dash _dash = new();
     private float _elapsedTime;
     private readonly TweenableFloat _fadeOverlayOpacity = new(1f);
+    private readonly TweenableFloat _overlayTextOpacity = new(1f);
     private bool _gameOver;
     private LevelUpOverlay? _levelUpScreen;
     private float _playerHitCooldown;
@@ -176,6 +177,7 @@ public class VampireCartridge : BasicGameCartridge
         if (input.Keyboard.GetButton(Keys.Escape).WasPressed)
         {
             _introTween.Add(_fadeOverlayOpacity.TweenTo(1f, 0.5f, Ease.Linear));
+            _introTween.Add(_overlayTextOpacity.TweenTo(0f, 0.5f, Ease.Linear));
             _introTween.Add(new WaitSecondsTween(0.5f));
             _introTween.Add(new CallbackTween(() =>
             {
@@ -959,7 +961,7 @@ public class VampireCartridge : BasicGameCartridge
             new DrawSettings {Color = Color.Black.WithMultipliedOpacity(_fadeOverlayOpacity)});
         painter.EndSpriteBatch();
 
-        var textOpacity = 1f;
+        var textOpacity = _overlayTextOpacity;
         if (_gameOver)
         {
             painter.BeginSpriteBatch();
