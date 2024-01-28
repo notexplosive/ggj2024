@@ -18,6 +18,10 @@ public struct Entity
     public bool IsActive { get; set; } = false;
     public Tag Tags { get; set; } = Tag.Empty;
     public float Speed { get; set; } = 1f;
+    public string? Sprite { get; set; } = null;
+    public Vector2 Velocity { get; set; } = default;
+    public int Health { get; set; } = 1;
+    public int HitDamage { get; set; } = 1;
 
     [Pure]
     public bool HasTag(Tag tag)

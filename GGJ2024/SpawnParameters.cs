@@ -8,4 +8,5 @@ namespace GGJ2024;
 public readonly struct SpawnParameters
 {
     public Vector2 Position { get; init; }
+    public Vector2 Velocity { get; init; }
 }

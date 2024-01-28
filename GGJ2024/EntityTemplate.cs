@@ -1,4 +1,6 @@
-﻿namespace GGJ2024;
+﻿using System;
+
+namespace GGJ2024;
 
 public class EntityTemplate
 {
@@ -17,10 +19,23 @@ public class EntityTemplate
     {
         return new Entity()
         {
-            HurtRadius = 32,
-            CollideRadius = 16,
-            Speed = 2,
-            Tags = Tag.Enemy | Tag.Solid
+            HurtRadius = 80,
+            CollideRadius = 64,
+            Speed = 4,
+            Tags = Tag.Enemy | Tag.Solid,
+            Sprite = "game/skeleton"
+        };
+    }
+    
+    public static Entity BigEnemy()
+    {
+        return new Entity()
+        {
+            HurtRadius = 120,
+            CollideRadius = 90,
+            Speed = 3f,
+            Tags = Tag.Enemy | Tag.Solid,
+            Sprite = "game/minotaur"
         };
     }
 
@@ -29,8 +44,20 @@ public class EntityTemplate
         return new Entity()
         {
             HurtRadius = 0,
-            CollideRadius = 8,
+            CollideRadius = 16,
             Tags = Tag.Item | Tag.Exp
+        };
+    }
+
+    public static Entity SwordBullet()
+    {
+        return new Entity()
+        {
+            HurtRadius = 0,
+            CollideRadius = 30,
+            Tags = Tag.Player,
+            Angle = -MathF.PI / 4,
+            Sprite = "game/plain-dagger"
         };
     }
 }
