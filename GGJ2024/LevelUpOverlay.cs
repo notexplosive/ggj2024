@@ -187,7 +187,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             button = button.Inflated(10, 10);
         }
         
-        painter.DrawRectangle(button, new DrawSettings {Color = isHovered ? Color.Blue : Color.DarkBlue, Depth = Depth.Back});
+        painter.DrawRectangle(button, new DrawSettings {Color = isHovered ? Color.Green : Color.Green.DimmedBy(0.25f), Depth = Depth.Back});
         var buttonLayout = CreateButtonLayout(button);
         var headerArea = buttonLayout.FindElement("Header");
         var iconArea = buttonLayout.FindElement("Icon");

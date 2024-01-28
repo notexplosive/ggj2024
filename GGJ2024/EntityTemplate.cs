@@ -36,7 +36,8 @@ public class EntityTemplate
             CollideRadius = 90,
             Speed = 3f,
             Tags = Tag.Enemy | Tag.Solid,
-            Sprite = "game/minotaur"
+            Sprite = "game/minotaur",
+            MaxHealth = 5
         };
     }
 

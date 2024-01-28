@@ -63,6 +63,8 @@ public class GGJCartridge : BasicGameCartridge
                         line.Position.ToVector2().StraightMultiply(Runtime.Window.RenderResolution), line.Duration,
                         Ease.CubicFastSlow))
             );
+            // initialize
+            _tween.Update(0);
 
             if (hasText)
             {

@@ -35,6 +35,7 @@ public class VampireCartridge : BasicGameCartridge
     private bool _playerShouldFlicker;
     private float _spawnWaveTimer = 2;
     private Upgrades? _upgrades;
+    private readonly EnemyWaves _waves;
 
     public VampireCartridge(HostRuntime runtime) : base(runtime)
     {
@@ -43,11 +44,13 @@ public class VampireCartridge : BasicGameCartridge
         _camera = new Camera(
             Runtime.Window.RenderResolution.ToRectangleF().Moved(-Runtime.Window.RenderResolution.ToVector2() / 2),
             Runtime.Window.RenderResolution);
+        _waves = new EnemyWaves(_world, _camera);
 
         _decorations = new Decoration[64];
 
         var worldSize = _camera.ViewBounds.Size * 2f;
-        _worldBounds = RectangleF.InflateFrom(Vector2.Zero, worldSize.X / 2f, worldSize.Y / 2f);
+        var worldScale = 2;
+        _worldBounds = RectangleF.InflateFrom(Vector2.Zero, worldSize.X / 2f * worldScale, worldSize.Y / 2f * worldScale);
 
         _world.SpawnEntity(EntityTemplate.Player, new SpawnParameters());
 
@@ -149,8 +152,13 @@ public class VampireCartridge : BasicGameCartridge
 
         if (input.Keyboard.GetButton(Keys.Escape).WasPressed)
         {
-            _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
-            _hostRuntime.HostCartridge.SwapTo<GGJCartridge>();
+            _introTween.Add(_fadeOverlayOpacity.TweenTo(1f, 0.5f, Ease.Linear));
+            _introTween.Add(new WaitSecondsTween(0.5f));
+            _introTween.Add(new CallbackTween(() =>
+            {
+                _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
+                _hostRuntime.HostCartridge.SwapTo<GGJCartridge>();
+            }));
         }
 
         if (_levelUpScreen != null && _levelUpScreen.IsActive)
@@ -164,7 +172,8 @@ public class VampireCartridge : BasicGameCartridge
         if (_dash.CanUse() && !MathUtils.IsVerySmall(inputVector))
         {
             if (Client.Input.Keyboard.GetButton(Keys.Space).WasPressed ||
-                Client.Input.Keyboard.GetButton(Keys.LeftShift).WasPressed)
+                Client.Input.Keyboard.GetButton(Keys.LeftShift).WasPressed ||
+                Client.Input.Keyboard.GetButton(Keys.RightShift).WasPressed)
             {
                 _dash.Use(_world.Entities[_world.GetPlayerIndex()]);
             }
@@ -217,6 +226,7 @@ public class VampireCartridge : BasicGameCartridge
         _world.SpawnFromBuffer();
         if (!_gameOver)
         {
+            _waves.Update(dt);
             MovePlayer(dt);
             MoveEnemiesTowardsPlayer(dt);
 
@@ -229,7 +239,6 @@ public class VampireCartridge : BasicGameCartridge
             CalculateBulletCollision();
             CollectExp(dt);
             CalculatePlayerHurt(dt);
-            SpawnWaves(dt);
         }
 
         ConstrainAllEntitiesToLevel();
@@ -276,50 +285,12 @@ public class VampireCartridge : BasicGameCartridge
                 // THIS USES PLAYER HURT RADIUS
                 if (_world.IsColliding(player.Position, player.HurtRadius, entity.Position, entity.CollideRadius))
                 {
-                    _playerHitCooldown = 2f;
+                    _playerHitCooldown = 1.25f;
                     _world.Entities[playerIndex].Health--;
                     break;
                 }
             }
         }
-    }
-
-    private void SpawnWaves(float dt)
-    {
-        _spawnWaveTimer -= dt;
-
-        if (_spawnWaveTimer < 0)
-        {
-            _spawnWaveTimer = 5;
-
-            var edges = new[] {RectEdge.Left, RectEdge.Right, RectEdge.Bottom, RectEdge.Top};
-
-            // todo: waves
-            for (var i = 0; i < 5; i++)
-            {
-                var edge = Client.Random.Clean.GetRandomElement(edges);
-                var point = VampireCartridge.GetRandomPointAlongEdge(_camera.ViewBounds.Inflated(64, 64), edge);
-
-                _world.SpawnEntity(EntityTemplate.Enemy, new SpawnParameters {Position = point});
-            }
-        }
-    }
-
-    private static Vector2 GetRandomPointAlongEdge(RectangleF rect, RectEdge edge)
-    {
-        switch (edge)
-        {
-            case RectEdge.Left:
-                return new Vector2(rect.Left, Client.Random.Clean.NextFloat(0, rect.Height));
-            case RectEdge.Right:
-                return new Vector2(rect.Right, Client.Random.Clean.NextFloat(0, rect.Height));
-            case RectEdge.Top:
-                return new Vector2(Client.Random.Clean.NextFloat(0, rect.Width), rect.Top);
-            case RectEdge.Bottom:
-                return new Vector2(Client.Random.Clean.NextFloat(0, rect.Width), rect.Bottom);
-        }
-
-        throw new Exception("invalid edge");
     }
 
     private void KillDeadThings()
@@ -334,7 +305,7 @@ public class VampireCartridge : BasicGameCartridge
                     if (!_gameOver)
                     {
                         _gameOver = true;
-                        _introTween.Add(_fadeOverlayOpacity.TweenTo(0.25f, 0.25f, Ease.Linear));
+                        _introTween.Add(_fadeOverlayOpacity.TweenTo(0.25f, 1f, Ease.Linear));
                         MusicPlayer.FadeOut();
                     }
                 }
@@ -485,6 +456,7 @@ public class VampireCartridge : BasicGameCartridge
             }
         }
 
+        // dislodge from each other
         for (var a = 0; a < _world.Entities.Length; a++)
         {
             if (_world.Entities[a].HasTag(Tag.Solid))
@@ -722,7 +694,7 @@ public class VampireCartridge : BasicGameCartridge
             var expBar = RectangleF.FromSizeAlignedWithin(insetScreen, new Vector2(insetScreen.Width - 100, 50),
                 Alignment.TopCenter);
 
-            painter.DrawStringWithinRectangle(smallFont, "Wave 1",
+            painter.DrawStringWithinRectangle(smallFont, $"Wave {_waves.CurrentIndex + 1}",
                 new RectangleF(new Vector2(expBar.X, y), new Vector2(expBar.Width, smallFont.Height)),
                 Alignment.BottomCenter,
                 new DrawSettings());

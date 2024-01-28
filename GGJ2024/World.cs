@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using ExplogineMonoGame;
+using ExplogineMonoGame.Data;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 
@@ -117,6 +119,15 @@ public class World
         Entities[index.Value] = SpawnRunner.Run(spawnAction, spawnParameters);
 
         _lastUsedEntityIndex = index.Value;
+    }
+
+    public void SpawnEntityAlongRandomEdge(Func<Entity> spawn, Camera camera)
+    {
+        var edges = new[] {RectEdge.Left, RectEdge.Right, RectEdge.Bottom, RectEdge.Top};
+
+        var edge = Client.Random.Clean.GetRandomElement(edges);
+        var point = MathUtils.GetRandomPointAlongEdge(camera.ViewBounds.Inflated(64, 64), edge);
+        SpawnEntity(spawn, new SpawnParameters {Position = point});
     }
 
     public bool AreEnemies(Entity a, Entity b)
