@@ -11,23 +11,20 @@
             "Animation": "Sleepy"
         },
         {
-            "Animation": "Blink"
-        },
-        {
-            "Animation": "Shocked",
-            "Duration": 0.25
-        },
-        {
-            "Animation": "None",
+            "Animation": "Blink",
             "Duration": 0.5
         },
         {
-            "Text": "Sorry... I didn't see you come in.",
-            "Animation": "Sad",
-            "Position": {
-                "x": 0.5,
-                "y": 0.6
-            },
+            "Animation": "None",
+            "Duration": 0.15
+        },
+        {
+            "Text": "Oh, hello!",
+            "Animation": "Happy"
+        },
+        {
+            "Text": "I didn't see you come in...",
+            "Animation": "Sad"
         },
         {
             "Text": "You're a [color(ff8000)]Player[/color], right?",
@@ -40,11 +37,7 @@
         },
         {
             "Text": "That means you're here for the Game.",
-            "Animation": "Happy",
-            "Position": {
-                "x": 0.6,
-                "y": 0.4
-            },
+            "Animation": "Happy"
         },
         {
             "Animation": "Blink"
@@ -77,7 +70,7 @@
             "Tilt": 0
         },
         {
-            "Text": "No... This isn't right.",
+            "Text": "Well... at least not yet.",
             "Animation": "Sad",
             "Tilt": 0.25,
             "Position": {
@@ -86,7 +79,7 @@
             },
         },
         {
-            "Text": "I have to entertain [color(ff8000)]you[/color].",
+            "Text": "I can show you what I have so far!",
             "Animation": "Morose",
             "Position": {
                 "x": 0.4,
@@ -94,40 +87,19 @@
             },
         },
         {
-            "Text": "I'll do my best!",
-            "Animation": "Mad",
-            "Position": {
-                "x": 0.5,
-                "y": 0.55
-            },
-            "Tilt": 0
-        },
-        {
-            "Text": "I'll put something together for you!",
-            "Animation": "Happy",
-            "Tilt": 0
-        },
-        {
             "Animation": "Blink",
             "Tilt": 0
         },
         {
-            "Animation": "Mad",
-            "Tilt": 0
-        },
-        {
-            "Text": "Ready? Here it goes!",
-            "Animation": "Focused",
+            "Text": "Hope you like it!",
+            "Animation": "Happy",
             "Duration": 3,
             "Tilt": 0
         },
         {
-            "Animation": "Focused",
+            "Animation": "Closed",
             "Duration": 2,
-            "Position": {
-                "x": 0.5,
-                "y": -0.5
-            }
-        },
+            "Tilt": 0
+        }
     ]
 }

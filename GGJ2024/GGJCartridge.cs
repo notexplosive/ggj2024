@@ -14,10 +14,10 @@ public class GGJCartridge : BasicGameCartridge
 {
     private readonly HostRuntime _hostRuntime;
     private readonly SequenceTween _tween = new();
-    private AnimatedText? _animatedText;
-    private AsyncInput? _asyncInput;
+    private AnimatedText _animatedText = null!;
+    private int _currentPage;
     private Cutscene _cutscene = new();
-    private Face? _face;
+    private Face _face = null!;
 
     public GGJCartridge(HostRuntime hostRuntime) : base(hostRuntime)
     {
@@ -28,14 +28,27 @@ public class GGJCartridge : BasicGameCartridge
 
     public override void OnCartridgeStarted()
     {
+        var dialogues = new List<string>
+        {
+            "Dynamic/intro.json",
+            "Dynamic/intro2.json",
+            "Dynamic/intro3.json",
+            "Dynamic/intro4.json",
+        };
+
+        var dialoguePath = "Dynamic/end.json";
+        if (dialogues.IsValidIndex(_hostRuntime.HostCartridge.StoryProgress))
+        {
+            dialoguePath = dialogues[_hostRuntime.HostCartridge.StoryProgress];
+        }
+        
         _cutscene = JsonConvert.DeserializeObject<Cutscene>(
-            Client.Debug.RepoFileSystem.ReadFile("Dynamic/intro.json"))!;
+            Client.Debug.RepoFileSystem.ReadFile(dialoguePath))!;
 
         _animatedText = new AnimatedText
         {
-            Rectangle = Runtime.Window.RenderResolution.ToRectangleF().Inflated(0, -100)
+            Rectangle = Runtime.Window.RenderResolution.ToRectangleF().Inflated(-100, -100)
         };
-        _asyncInput = new AsyncInput();
 
         _face = new Face
         {
@@ -43,36 +56,33 @@ public class GGJCartridge : BasicGameCartridge
             Radius = 80
         };
 
-        foreach (var line in _cutscene.Dialogue)
-        {
-            var hasText = !string.IsNullOrEmpty(line.Text);
-            _tween.Add(
-                new MultiplexTween()
-                    .AddChannel(new DynamicTween(() =>
+        RunPage(_cutscene.Dialogue[_currentPage]);
+
+        // initialize first frame
+        _tween.Update(0);
+    }
+
+    private void RunPage(DialogueLine line)
+    {
+        var hasText = !string.IsNullOrEmpty(line.Text);
+        _tween.Clear();
+        _tween.Add(
+            new MultiplexTween()
+                .AddChannel(new DynamicTween(() =>
+                {
+                    if (hasText)
                     {
-                        if (hasText)
-                        {
-                            return _animatedText.Animator.AppearWithText(line.Text!, 0.25f);
-                        }
+                        return _animatedText.Animator.AppearWithText(line.Text!, 0.25f);
+                    }
 
-                        return _animatedText.Animator.FadeOut(0.25f);
-                    }))
-                    .AddChannel(_face.DoAnimation(line.Animation, line.Duration))
-                    .AddChannel(_face.Animator.HeadTilt.TweenTo(line.Tilt, line.Duration, Ease.CubicFastSlow))
-                    .AddChannel(_face.Animator.Position.TweenTo(
-                        line.Position.ToVector2().StraightMultiply(Runtime.Window.RenderResolution), line.Duration,
-                        Ease.CubicFastSlow))
-            );
-            // initialize
-            _tween.Update(0);
-
-            if (hasText)
-            {
-                _tween.Add(_asyncInput.WaitForKeypress(Keys.Space));
-            }
-        }
-
-        _tween.Add(new CallbackTween(() => LoadGame()));
+                    return _animatedText.Animator.FadeOut(0.25f);
+                }))
+                .AddChannel(_face.DoAnimation(line.Animation, line.Duration))
+                .AddChannel(_face.Animator.HeadTilt.TweenTo(line.Tilt, line.Duration, Ease.CubicFastSlow))
+                .AddChannel(_face.Animator.Position.TweenTo(
+                    line.Position.ToVector2().StraightMultiply(Runtime.Window.RenderResolution), line.Duration,
+                    Ease.CubicFastSlow))
+        );
     }
 
     private void LoadGame()
@@ -87,13 +97,47 @@ public class GGJCartridge : BasicGameCartridge
         {
             LoadGame();
         }
-        
-        _asyncInput?.UpdateInput(input, hitTestStack);
+
+        if (input.Keyboard.GetButton(Keys.Space).WasPressed)
+        {
+            if (_cutscene.Dialogue.IsValidIndex(_currentPage))
+            {
+                NextPage();
+            }
+            else
+            {
+                _tween.Add(new CallbackTween(() => { LoadGame(); }));
+            }
+        }
+    }
+
+    private void NextPage()
+    {
+        _currentPage++;
+
+        if (_cutscene.Dialogue.IsValidIndex(_currentPage))
+        {
+            RunPage(_cutscene.Dialogue[_currentPage]);
+        }
     }
 
     public override void Update(float dt)
     {
         _tween.Update(dt);
+
+        if (!_cutscene.Dialogue.IsValidIndex(_currentPage))
+        {
+            LoadGame();
+            return;
+        }
+
+        if (string.IsNullOrEmpty(_cutscene.Dialogue[_currentPage].Text) && _tween.IsDone())
+        {
+            if (_cutscene.Dialogue.IsValidIndex(_currentPage))
+            {
+                NextPage();
+            }
+        }
     }
 
     public override void Draw(Painter painter)
@@ -135,8 +179,9 @@ public class AsyncInput
     {
         if (_input == null)
         {
-            return new WaitUntilTween(()=>true);
+            return new WaitUntilTween(() => true);
         }
+
         return new WaitUntilTween(() => _input.Keyboard.GetButton(key).WasPressed);
     }
 }

@@ -1,0 +1,42 @@
+{
+    "Dialogue": [
+        {
+            "Animation": "FastWake"
+        },
+        {
+            "Animation": "None",
+            "Text": "OK! I got it!"
+        },
+        {
+            "Animation": "Happy",
+            "Text": "I know what this game needs."
+        },
+        {
+            "Animation": "Blink"
+        },
+        {
+            "Animation": "Focused",
+            "Text": "Progression!",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "None",
+            "Text": "You need to level up.",
+        },
+        {
+            "Animation": "Mad",
+            "Text": "Upgrade!",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "Closed",
+            "Duration": 2
+        },
+    ]
+}

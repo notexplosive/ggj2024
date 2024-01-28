@@ -141,6 +141,15 @@ public class Face : IDrawHook, IUpdateHook
                     .Add(_openAmount.TweenTo(0.55f, 0.25f, Ease.CubicFastSlow))
                 ;
         }
+        
+        public ITween FastWake(float duration)
+        {
+            return new SequenceTween()
+                    .Add(_openAmount.CallbackSetTo(0f))
+                    .Add(new WaitSecondsTween(0.25f))
+                    .Add(_openAmount.TweenTo(1f, duration, Ease.CubicFastSlow))
+                ;
+        }
 
         public ITween Blink(float fullDuration)
         {
@@ -222,6 +231,20 @@ public class Face : IDrawHook, IUpdateHook
                     .AddChannel(RadiusFactor.TweenTo(1f, duration, Ease.CubicFastSlow))
                 ;
         }
+        
+        public ITween Closed(float duration)
+        {
+            return new MultiplexTween()
+                    .AddChannel(_openAmount.TweenTo(0f, duration, Ease.CubicFastSlow))
+                ;
+        }
+        
+        public ITween Open(float duration)
+        {
+            return new MultiplexTween()
+                    .AddChannel(_openAmount.TweenTo(1f, duration, Ease.CubicFastSlow))
+                ;
+        }
 
         public ITween Shocked(float duration)
         {
@@ -229,7 +252,7 @@ public class Face : IDrawHook, IUpdateHook
                     .AddChannel(_browTilt.TweenTo(0.5f, duration, Ease.CubicFastSlow))
                     .AddChannel(
                         new SequenceTween()
-                            .Add(RadiusFactor.TweenTo(0.8f, duration/2f, Ease.CubicFastSlow))
+                            .Add(RadiusFactor.TweenTo(1.3f, duration/2f, Ease.CubicFastSlow))
                             .Add(RadiusFactor.TweenTo(1f, duration/2f, Ease.CubicSlowFast))
                         )
                     .AddChannel(_openAmount.TweenTo(1.5f, duration, Ease.CubicFastSlow))

@@ -33,9 +33,17 @@ public class VampireCartridge : BasicGameCartridge
     private float _playerMoveTimer;
     private Vector2 _playerMoveVector;
     private bool _playerShouldFlicker;
-    private float _spawnWaveTimer = 2;
     private Upgrades? _upgrades;
     private readonly EnemyWaves _waves;
+
+    // ReSharper disable once InconsistentNaming
+    private bool StoryBeat_NoEnemies => _hostRuntime.HostCartridge.StoryProgress == 0;
+    
+    // ReSharper disable once InconsistentNaming
+    private bool StoryBeat_Monsters => _hostRuntime.HostCartridge.StoryProgress == 1;
+    
+    // ReSharper disable once InconsistentNaming
+    private bool StoryBeat_Weapons => _hostRuntime.HostCartridge.StoryProgress == 2;
 
     public VampireCartridge(HostRuntime runtime) : base(runtime)
     {
@@ -129,7 +137,10 @@ public class VampireCartridge : BasicGameCartridge
                     rectangle);
         }
 
-        MusicPlayer.FadeToMain();
+        if (!StoryBeat_NoEnemies)
+        {
+            MusicPlayer.FadeToMain();
+        }
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
@@ -156,6 +167,7 @@ public class VampireCartridge : BasicGameCartridge
             _introTween.Add(new WaitSecondsTween(0.5f));
             _introTween.Add(new CallbackTween(() =>
             {
+                _hostRuntime.HostCartridge.StoryProgress++;
                 _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
                 _hostRuntime.HostCartridge.SwapTo<GGJCartridge>();
             }));
@@ -169,7 +181,7 @@ public class VampireCartridge : BasicGameCartridge
 
         var inputVector = InputCalculations.CalculateInputVector(input);
 
-        if (_dash.CanUse() && !MathUtils.IsVerySmall(inputVector))
+        if (_dash.CanUse() && !MathUtils.IsVerySmall(inputVector) && !StoryBeat_Monsters && !StoryBeat_NoEnemies)
         {
             if (Client.Input.Keyboard.GetButton(Keys.Space).WasPressed ||
                 Client.Input.Keyboard.GetButton(Keys.LeftShift).WasPressed ||
@@ -226,7 +238,11 @@ public class VampireCartridge : BasicGameCartridge
         _world.SpawnFromBuffer();
         if (!_gameOver)
         {
-            _waves.Update(dt);
+            if (!StoryBeat_NoEnemies)
+            {
+                _waves.Update(dt);
+            }
+
             MovePlayer(dt);
             MoveEnemiesTowardsPlayer(dt);
 
@@ -235,7 +251,11 @@ public class VampireCartridge : BasicGameCartridge
                 AdjustCamera(dt);
             }
 
-            RunPlayerAbilities(dt);
+            if (!StoryBeat_Monsters)
+            {
+                RunPlayerAbilities(dt);
+            }
+
             CalculateBulletCollision();
             CollectExp(dt);
             CalculatePlayerHurt(dt);
@@ -312,8 +332,12 @@ public class VampireCartridge : BasicGameCartridge
                 else
                 {
                     _world.DestroyEntity(i);
-                    _world.SpawnEntity(EntityTemplate.Exp,
-                        new SpawnParameters {Position = _world.Entities[i].Position});
+
+                    if (!StoryBeat_Weapons)
+                    {
+                        _world.SpawnEntity(EntityTemplate.Exp,
+                            new SpawnParameters {Position = _world.Entities[i].Position});
+                    }
                 }
             }
         }
@@ -599,7 +623,7 @@ public class VampireCartridge : BasicGameCartridge
                             flickerOpacity = 0.25f;
                         }
 
-                        if (_introTween.IsDone())
+                        if (_introTween.IsDone() && !StoryBeat_NoEnemies)
                         {
                             // health bar
                             painter.DrawRectangle(
@@ -617,16 +641,19 @@ public class VampireCartridge : BasicGameCartridge
                                         20)),
                                 new DrawSettings {Color = Color.DarkRed, Depth = Depth.Back - 10});
 
-                            // dash
-                            painter.DrawRectangle(
-                                new RectangleF(
-                                        entity.Position - new Vector2(texture.Width / 2f * scale,
-                                            texture.Height / 2f * scale + 40),
-                                        new Vector2(
-                                            texture.Width * scale * Math.Min(1,
-                                                1 - _dash.CurrentCooldown / _dash.TotalCooldown), 10))
-                                    .Moved(new Vector2(0, 20)),
-                                new DrawSettings {Color = Color.LightBlue, Depth = Depth.Back - 10});
+                            if (!StoryBeat_Monsters)
+                            {
+                                // dash
+                                painter.DrawRectangle(
+                                    new RectangleF(
+                                            entity.Position - new Vector2(texture.Width / 2f * scale,
+                                                texture.Height / 2f * scale + 40),
+                                            new Vector2(
+                                                texture.Width * scale * Math.Min(1,
+                                                    1 - _dash.CurrentCooldown / _dash.TotalCooldown), 10))
+                                        .Moved(new Vector2(0, 20)),
+                                    new DrawSettings {Color = Color.LightBlue, Depth = Depth.Back - 10});
+                            }
                         }
 
                         painter.DrawAtPosition(texture, entity.Position + new Vector2(0, texture.Height / 2f * scale),
@@ -683,7 +710,7 @@ public class VampireCartridge : BasicGameCartridge
         var smallFont = Client.Assets.GetFont("game/font", 80);
         var bigFont = Client.Assets.GetFont("game/font", 256);
 
-        if (!_gameOver)
+        if (!_gameOver && !StoryBeat_NoEnemies && !StoryBeat_Monsters && !StoryBeat_Weapons)
         {
             painter.BeginSpriteBatch();
             var insetScreen = Runtime.Window.RenderResolution.ToRectangleF().Inflated(0, -100);
@@ -730,6 +757,21 @@ public class VampireCartridge : BasicGameCartridge
                 Alignment.Center,
                 new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center});
             painter.DrawStringWithinRectangle(smallFont, "\n\n\n\nPress Esc to Restart",
+                Runtime.Window.RenderResolution.ToRectangleF(), Alignment.Center, new DrawSettings
+                {
+                    Angle = MathF.Sin(_elapsedTime) * 0.1f,
+                    Origin = DrawOrigin.Center
+                });
+            painter.EndSpriteBatch();
+        }
+
+        if (StoryBeat_NoEnemies && _elapsedTime > 5)
+        {
+            painter.BeginSpriteBatch();
+            painter.DrawStringWithinRectangle(bigFont, "BORING", Runtime.Window.RenderResolution.ToRectangleF(),
+                Alignment.Center,
+                new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center});
+            painter.DrawStringWithinRectangle(smallFont, "\n\n\n\nPress Esc to Exit",
                 Runtime.Window.RenderResolution.ToRectangleF(), Alignment.Center, new DrawSettings
                 {
                     Angle = MathF.Sin(_elapsedTime) * 0.1f,

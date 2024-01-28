@@ -1,0 +1,68 @@
+{
+    "Dialogue": [
+        {
+            "Animation": "FastWake"
+        },
+        {
+            "Animation": "Sad",
+            "Text": "Maybe Monsters isn't enough to make the game fun."
+        },
+        {
+            "Animation": "Happy",
+            "Text": "You need a way to defend yourself."
+        },
+        {
+            "Animation": "Blink"
+        },
+        {
+            "Animation": "Focused",
+            "Text": "How about this...",
+            "Position": {
+                "x": 0.3,
+                "y": 0.5
+            },
+        },
+        {
+            "Animation": "None",
+            "Text": "You can press SPACE or SHIFT to dash.",
+            "Position": {
+                "x": 0.7,
+                "y": 0.5
+            },
+        },
+        {
+            "Animation": "None",
+            "Text": "And I'm giving you a weapon you can use to fight enemies.",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "Blink",
+        },
+        {
+            "Animation": "Focused",
+            "Text": "I'm not sure what button to bind it to."
+        },
+        {
+            "Animation": "Blink",
+        },
+        {
+            "Animation": "None",
+            "Text": "I'll just make it auto-attack for now."
+        },
+        {
+            "Text": "Good luck!",
+            "Animation": "Happy",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "Closed",
+            "Duration": 2
+        },
+    ]
+}

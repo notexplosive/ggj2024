@@ -1,0 +1,18 @@
+{
+    "Dialogue": [
+        {
+            "Animation": "FastWake"
+        },
+        {
+            "Animation": "Happy"
+        },
+        {
+            "Animation": "Blink",
+            "Duration": 0.5
+        },
+        {
+            "Animation": "Closed",
+            "Duration": 2
+        },
+    ]
+}
