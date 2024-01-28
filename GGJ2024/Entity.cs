@@ -25,6 +25,9 @@ public struct Entity
     public int HitDamage { get; set; } = 1;
     public float HurtTimer { get; set; } = 0f;
     public bool FlipX { get; set; } = default;
+    public bool RotateWithVelocity { get; set; } = default;
+    public bool Spin { get; set; } = default;
+    public int CleaveCount { get; set; } = default;
 
     [Pure]
     public bool HasTag(Tag tag)

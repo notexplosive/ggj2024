@@ -220,6 +220,18 @@
 /processorParam:Quality=Best
 /build:game/hit.ogg
 
+#begin game/meat-cleaver.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:game/meat-cleaver.png
+
 #begin game/menu-theme.ogg
 /importer:OggImporter
 /processor:SoundEffectProcessor

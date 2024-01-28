@@ -1,4 +1,5 @@
-﻿using ExplogineMonoGame;
+﻿using ExplogineCore;
+using ExplogineMonoGame;
 using ExplogineMonoGame.Cartridges;
 
 namespace GGJ2024;
@@ -11,6 +12,11 @@ public class HostCartridge : HotReloadCartridge
     {
     }
 
+    protected override void BeforeStart()
+    {
+        StoryProgress = Client.Args.GetValue<int>("progress");
+    }
+
     protected override void BeforeUpdate(float dt)
     {
         MusicPlayer.Update(dt);
@@ -19,5 +25,11 @@ public class HostCartridge : HotReloadCartridge
     public override void OnHotReload()
     {
         StoryProgress = 0;
+    }
+
+    public override void AddCommandLineParameters(CommandLineParametersWriter parameters)
+    {
+        base.AddCommandLineParameters(parameters);
+        parameters.RegisterParameter<int>("progress");
     }
 }

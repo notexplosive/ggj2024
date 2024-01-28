@@ -10,4 +10,5 @@ public readonly struct SpawnParameters
     public Vector2 Position { get; init; }
     public Vector2 Velocity { get; init; }
     public int? HitDamage { get; init; }
+    public int? CleaveCount { get; init; }
 }

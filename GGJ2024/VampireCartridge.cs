@@ -64,9 +64,12 @@ public class VampireCartridge : BasicGameCartridge
         _world.SpawnEntity(EntityTemplate.Player, new SpawnParameters());
 
         var sword = new Sword();
+        var cleaver = new Cleaver();
         _playerAbilities.Add(sword);
-        _stats = new(_world, _dash, sword);
-
+        _playerAbilities.Add(cleaver);
+        _stats = new(_world, _dash, sword, cleaver);
+        sword.IsUnlocked = true;
+        
         var targetViewBounds = _camera.ViewBounds;
         _fadeOverlayOpacity.Value = 1f;
         _introTween
@@ -239,6 +242,8 @@ public class VampireCartridge : BasicGameCartridge
             _levelUpScreen.Update(dt);
             return;
         }
+
+        SpinSpinningBullets(dt);
         
         _dash.Update(dt);
         UpdateAllHurtTimers(dt);
@@ -274,6 +279,17 @@ public class VampireCartridge : BasicGameCartridge
         ConstrainAllEntitiesToLevel();
         MoveThingsAlongVelocity(dt);
         KillDeadThings();
+    }
+
+    private void SpinSpinningBullets(float dt)
+    {
+        for (int i = 0; i < _world.Bullets.Length; i++)
+        {
+            if (_world.Bullets[i].Spin)
+            {
+                _world.Bullets[i].Angle += dt * 30;
+            }
+        }
     }
 
     private void PlayMovementSounds()
@@ -344,7 +360,11 @@ public class VampireCartridge : BasicGameCartridge
                 {
                     if (!_gameOver)
                     {
-                        _gameOver = true;
+                        _freezeTimer = 0.5f;
+                        _introTween.Add(new CallbackTween(() =>
+                        {
+                            _gameOver = true;
+                        }));
                         _introTween.Add(_fadeOverlayOpacity.TweenTo(0.25f, 1f, Ease.Linear));
                         MusicPlayer.FadeOut();
                     }
@@ -376,7 +396,7 @@ public class VampireCartridge : BasicGameCartridge
                 {
                     var entity = _world.Entities[entityIndex];
                     // THIS USES HURT RADIUS
-                    if (_world.AreEnemies(bullet, entity) && _world.IsColliding(bullet.Position, bullet.CollideRadius,
+                    if (_world.Entities[entityIndex].HurtTimer <= 0 && _world.AreEnemies(bullet, entity) && _world.IsColliding(bullet.Position, bullet.CollideRadius,
                             entity.Position, entity.HurtRadius))
                     {
                         foundEntity = entityIndex;
@@ -387,9 +407,15 @@ public class VampireCartridge : BasicGameCartridge
                 if (foundEntity != -1)
                 {
                     GGJSoundPlayer.Play("game/hit", 0.5f, (Client.Random.Dirty.NextFloat() - 0.5f)/2f);
-                    _world.DestroyBullet(bulletIndex);
+                    
+                    _world.Bullets[bulletIndex].CleaveCount--;
+                    if (_world.Bullets[bulletIndex].CleaveCount <= 0)
+                    {
+                        _world.DestroyBullet(bulletIndex);
+                    }
+                    
                     _world.Entities[foundEntity].Health -= bullet.HitDamage;
-                    _world.Entities[foundEntity].HurtTimer = 0.15f;
+                    _world.Entities[foundEntity].HurtTimer = 0.25f;
                 }
             }
         }
@@ -418,7 +444,10 @@ public class VampireCartridge : BasicGameCartridge
     {
         foreach (var ability in _playerAbilities)
         {
-            ability.Update(dt, _world, _world.Entities[_world.GetPlayerIndex()]);
+            if (ability.IsUnlocked)
+            {
+                ability.Update(dt, _world, _world.Entities[_world.GetPlayerIndex()]);
+            }
         }
     }
 
@@ -739,11 +768,17 @@ public class VampireCartridge : BasicGameCartridge
                 if (bullet.Sprite != null)
                 {
                     var texture2D = Client.Assets.GetTexture(bullet.Sprite);
+                    var angle = bullet.Angle;
+                    if (bullet.RotateWithVelocity)
+                    {
+                        angle = bullet.Angle + bullet.Velocity.GetAngleFromUnitX();
+                    }
+                    
                     painter.DrawAtPosition(texture2D, bullet.Position, new Scale2D(scale),
                         new DrawSettings
                         {
                             Origin = DrawOrigin.Center, Color = color,
-                            Angle = bullet.Angle + bullet.Velocity.GetAngleFromUnitX()
+                            Angle = angle
                         });
                 }
                 else

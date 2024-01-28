@@ -5,6 +5,8 @@ namespace GGJ2024;
 public abstract class Ability
 {
     private float _currentCooldownTimer;
+    
+    public bool IsUnlocked { get; set; }
 
     public void Update(float dt, World world, Entity caster)
     {
@@ -20,6 +22,7 @@ public abstract class Ability
     }
 
     public float Cooldown { get; set; }
+    public int CleaveCount { get; set; }
     public float Range { get; set; }
 
     protected abstract bool Use(World world, Entity caster);

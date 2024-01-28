@@ -15,6 +15,7 @@ public static class SpawnRunner
             Position = spawnParameters.Position,
             Velocity = spawnParameters.Velocity,
             HitDamage = spawnParameters.HitDamage ?? spawned.HitDamage,
+            CleaveCount = spawnParameters.CleaveCount ?? 0,
             
             // Basics
             IsActive = true,

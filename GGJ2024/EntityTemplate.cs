@@ -59,7 +59,22 @@ public class EntityTemplate
             CollideRadius = 30,
             Tags = Tag.Player,
             Angle = -MathF.PI / 4,
-            Sprite = "game/plain-dagger"
+            Sprite = "game/plain-dagger",
+            RotateWithVelocity = true
+        };
+    }
+    
+    public static Entity CleaverBullet()
+    {
+        return new Entity()
+        {
+            HurtRadius = 0,
+            CollideRadius = 30,
+            Tags = Tag.Player,
+            Angle = -MathF.PI / 4,
+            // CleaveCount gets set by spawn parameters
+            Spin = true,
+            Sprite = "game/meat-cleaver"
         };
     }
 }

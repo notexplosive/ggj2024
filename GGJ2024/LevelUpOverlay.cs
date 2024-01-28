@@ -148,7 +148,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
     {
         var root = new LayoutBuilder(new Style
         {
-            Alignment = Alignment.Center, Margin = new Vector2(50, 150), Orientation = Orientation.Vertical,
+            Alignment = Alignment.Center, Margin = new Vector2(50, 50), Orientation = Orientation.Vertical,
             PaddingBetweenElements = 10
         });
 
@@ -176,7 +176,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         {
             Margin = new Vector2(20, 20), Alignment = Alignment.Center, Orientation = Orientation.Vertical
         }, L.FillBoth());
-        innerGroup.Add(L.FillHorizontal("Header", 100));
+        innerGroup.Add(L.FillHorizontal("Header", 200));
 
         var iconSize = 200;
         var group = innerGroup.AddGroup(new Style {Alignment = Alignment.Center}, L.FillHorizontal(iconSize));
@@ -199,7 +199,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         var iconArea = buttonLayout.FindElement("Icon");
         var descriptionArea = buttonLayout.FindElement("Description");
 
-        painter.DrawStringWithinRectangle(_titleFont, reward.Title, headerArea, Alignment.BottomCenter,
+        painter.DrawStringWithinRectangle(_titleFont, reward.Title, headerArea, Alignment.TopCenter,
             new DrawSettings());
         painter.DrawAsRectangle(Client.Assets.GetTexture(reward.IconName), iconArea, new DrawSettings());
         painter.DrawStringWithinRectangle(_descriptionFont,
