@@ -518,7 +518,7 @@ public class VampireCartridge : BasicGameCartridge
             {
                 for (var b = 0; b < _world.Entities.Length; b++)
                 {
-                    if (_world.Entities[b].HasTag(Tag.Exp) && _world.IsWithinDistance(a, b, 200))
+                    if (_world.Entities[b].HasTag(Tag.Exp) && _world.IsWithinDistance(a, b, _stats.ExpRadius.Value))
                     {
                         _world.Entities[b].Position = Vector2.Lerp(_world.Entities[b].Position, primary.Position,
                             0.25f * dt * 60f);

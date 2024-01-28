@@ -11,6 +11,7 @@ public class Stats
     public readonly Stat<float> SwordCooldown = new("Sword cooldown", 1f);
     public readonly Stat<int> SwordDamage = new("Sword damage", 1);
     public readonly Stat<float> SwordRange = new("Sword range", 700f);
+    public readonly Stat<float> ExpRadius = new("EXP Radius", 200);
 
     public Stats(World world, Dash dash, Sword sword)
     {
@@ -26,4 +27,5 @@ public class Stats
             world.Entities[world.GetPlayerIndex()].Health = x;
         });
     }
+
 }

@@ -45,6 +45,8 @@ public class Upgrades
             new InfiniteUpgradeSequence(new DeltaIntUpgrade(stats.MaxHealth, 1))));
         _rewards.Add(new LevelUpReward("Reach Further", "game/plain-dagger",
             new InfiniteUpgradeSequence(new DeltaFloatUpgrade(stats.SwordRange, 25))));
+        _rewards.Add(new LevelUpReward("EXP Magnet", "game/person",
+            new InfiniteUpgradeSequence(new DeltaFloatUpgrade(stats.ExpRadius, 25))));
     }
 
     public IEnumerable<LevelUpReward> Pull(int count)
