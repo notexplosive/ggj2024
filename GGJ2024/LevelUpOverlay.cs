@@ -191,14 +191,17 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             new DrawSettings());
     }
 
-    public void IncrementExp()
+    public bool IncrementExp()
     {
         _exp++;
 
         if (_exp >= _expToNextLevel)
         {
             Show();
+            return true;
         }
+
+        return false;
     }
 
     public float Percent()

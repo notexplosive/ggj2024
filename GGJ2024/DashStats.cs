@@ -38,4 +38,9 @@ public class Dash
     {
         return CurrentCooldown <= 0;
     }
+
+    public void FreeCooldown()
+    {
+        CurrentCooldown = 0f;
+    }
 }

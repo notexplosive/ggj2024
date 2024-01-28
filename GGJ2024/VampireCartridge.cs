@@ -508,7 +508,11 @@ public class VampireCartridge : BasicGameCartridge
                         if (_world.IsColliding(a, b))
                         {
                             _world.DestroyEntity(b);
-                            _levelUpScreen?.IncrementExp();
+                            if ((bool) _levelUpScreen?.IncrementExp())
+                            {
+                                _world.Entities[a].Health = _world.Entities[a].MaxHealth;
+                                _dash.FreeCooldown();
+                            }
                         }
                     }
                 }
