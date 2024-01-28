@@ -30,6 +30,35 @@ public class Upgrades
             new InfiniteUpgradeSequence(new DeltaIntUpgrade(stats.CleaverCleaveCount, 1))));
         
         
+        _rewards.Add(new LevelUpReward("Dash Bombs", "game/unlit-bomb",
+            null,
+            new SpecificUpgradeSequence(new EquipUpgrade(stats.HasBomb, true))
+        ));
+        
+        _rewards.Add(new LevelUpReward("Strong Bombs", "game/unlit-bomb",
+            ()=>stats.HasBomb.Value,
+            new InfiniteUpgradeSequence(new DeltaIntUpgrade(stats.BombDamage, 1))));
+        
+        _rewards.Add(new LevelUpReward("Bigger Bombs", "game/unlit-bomb",
+            ()=>stats.HasBomb.Value,
+            new InfiniteUpgradeSequence(new DeltaFloatUpgrade(stats.BombExplosionRadius, 100))));
+        
+        
+        _rewards.Add(new LevelUpReward("Thorns Aura", "game/light-thorny-triskelion",
+            null,
+            new SpecificUpgradeSequence(new EquipUpgrade(stats.HasThorns, true))
+        ));
+        
+        _rewards.Add(new LevelUpReward("Stronger Thorns", "game/light-thorny-triskelion",
+            ()=>stats.HasThorns.Value,
+            new InfiniteUpgradeSequence(new DeltaIntUpgrade(stats.ThornsDamage, 1))));
+        
+        _rewards.Add(new LevelUpReward("Bigger Thorns", "game/light-thorny-triskelion",
+            ()=>stats.HasThorns.Value,
+            new InfiniteUpgradeSequence(new DeltaFloatUpgrade(stats.ThornsExplosionRadius, 130))));
+        
+        
+        
         _rewards.Add(new LevelUpReward("Faster Dash Cooldown", "game/sprint",
             null,
             new SpecificUpgradeSequence(

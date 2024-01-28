@@ -12,4 +12,5 @@ public enum Tag
     Exp = 8,
     BonusItem = 16,
     Solid = 32,
+    Bomb = 64
 }

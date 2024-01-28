@@ -14,6 +14,7 @@ namespace GGJ2024;
 
 public class VampireCartridge : BasicGameCartridge
 {
+    private readonly VfxCollection _vfx = new();
     private readonly Camera _camera;
     private readonly Decoration[] _decorations;
     private readonly HostRuntime _hostRuntime;
@@ -36,6 +37,9 @@ public class VampireCartridge : BasicGameCartridge
     private Upgrades? _upgrades;
     private readonly EnemyWaves _waves;
     private float _freezeTimer;
+    private readonly Bombs _dashBombs;
+    private readonly Bombs _thorns;
+    private readonly Bombs _explodeEnemies;
 
     // ReSharper disable once InconsistentNaming
     private bool StoryBeat_NoEnemies => _hostRuntime.HostCartridge.StoryProgress == 0;
@@ -65,9 +69,13 @@ public class VampireCartridge : BasicGameCartridge
 
         var sword = new Sword();
         var cleaver = new Cleaver();
+        _thorns = new Bombs();
+        _explodeEnemies = new Bombs();
+        _dashBombs = new Bombs();
         _playerAbilities.Add(sword);
         _playerAbilities.Add(cleaver);
-        _stats = new(_world, _dash, sword, cleaver);
+        _stats = new(_world, _dash, sword, cleaver, _dashBombs, _thorns, _explodeEnemies);
+        
         sword.IsUnlocked = true;
         
         var targetViewBounds = _camera.ViewBounds;
@@ -192,7 +200,13 @@ public class VampireCartridge : BasicGameCartridge
                 Client.Input.Keyboard.GetButton(Keys.RightShift).WasPressed)
             {
                 GGJSoundPlayer.Play("game/bong", 1f, -1f);
-                _dash.Use(_world.Entities[_world.GetPlayerIndex()]);
+                var player = _world.Entities[_world.GetPlayerIndex()];
+                _dash.Use(player);
+
+                if (_dashBombs.IsUnlocked)
+                {
+                    _world.SpawnEntity(EntityTemplate.Bomb, new SpawnParameters{Position = player.Position});
+                }
             }
         }
 
@@ -207,6 +221,26 @@ public class VampireCartridge : BasicGameCartridge
                 }
             }
         }
+    }
+
+    private void ExplodeAt(Vector2 position, float explosionRadius, int damage, Color? color = null)
+    {
+        var vfx = new VfxInstance(position, 64);
+        vfx.Angle.Value = Client.Random.Dirty.NextFloat(0, MathF.PI * 2);
+        vfx.BaseColor = color ?? Color.White;
+        vfx.Tween
+            .Add(vfx.Radius.TweenTo(explosionRadius * 1.2f, 0.15f, Ease.CubicFastSlow))
+            .Add(vfx.Opacity.TweenTo(0, 0.5f, Ease.CubicFastSlow))
+            ;
+        _vfx.Add(vfx);
+        _world.SpawnBullet(() => new Entity()
+        {
+            Velocity = new Vector2(0,0),
+            CollideRadius = explosionRadius,
+            Tags = Tag.Player,
+            HitsMultipleTargetsOnSameFrame = true,
+            Hide = true,
+        }, new SpawnParameters() {Position = position, HitDamage = damage });
     }
 
     public override void Update(float dt)
@@ -246,8 +280,30 @@ public class VampireCartridge : BasicGameCartridge
         SpinSpinningBullets(dt);
         
         _dash.Update(dt);
+        if (_dash.IsDashing)
+        {
+            var player = _world.Entities[_world.GetPlayerIndex()];
+            var vfx = new VfxInstance(player.Position - _playerMoveVector * 5, player.CollideRadius * 2);
+            vfx.BaseColor = Color.LightBlue;
+            vfx.SpriteName = "game/falling-leaf";
+            vfx.Angle.Value = Client.Random.Dirty.NextFloat() * MathF.PI * 2;
+            vfx.Tween.Add(
+                new MultiplexTween()
+                    .AddChannel(vfx.Angle.TweenTo(MathF.PI * 2, 3f, Ease.CubicFastSlow))
+                    .AddChannel(
+                        new SequenceTween()
+                            .Add(new WaitSecondsTween(Client.Random.Dirty.NextFloat(0.25f, 0.5f)))
+                            .Add(vfx.Radius.TweenTo(0f, 0.5f, Ease.CubicFastSlow))
+                        
+                        )
+                    .AddChannel(vfx.Position.TweenTo(vfx.Position + Client.Random.Dirty.NextNormalVector2() * 100, 0.5f, Ease.CubicFastSlow))
+            );
+            
+            _vfx.Add(vfx);
+        }
+        
+        _vfx.Update(dt);
         UpdateAllHurtTimers(dt);
-
         PlayMovementSounds();
 
         _world.SpawnFromBuffer();
@@ -274,11 +330,29 @@ public class VampireCartridge : BasicGameCartridge
             CalculateBulletCollision();
             CollectExp(dt);
             CalculatePlayerHurt(dt);
+            TickBombsAndExplode(dt);
         }
 
         ConstrainAllEntitiesToLevel();
         MoveThingsAlongVelocity(dt);
         KillDeadThings();
+    }
+
+    private void TickBombsAndExplode(float dt)
+    {
+        for (int i = 0; i < _world.Entities.Length; i++)
+        {
+            if (_world.Entities[i].HasTag(Tag.Bomb))
+            {
+                _world.Entities[i].DetonationTimer -= dt;
+
+                if (_world.Entities[i].DetonationTimer < 0)
+                {
+                    _world.DestroyEntity(i);
+                    ExplodeAt(_world.Entities[i].Position, _dashBombs.ExplosionRadius, _dashBombs.Damage, Color.White);
+                }
+            }
+        }
     }
 
     private void SpinSpinningBullets(float dt)
@@ -339,6 +413,11 @@ public class VampireCartridge : BasicGameCartridge
                 // THIS USES PLAYER HURT RADIUS
                 if (_world.IsColliding(player.Position, player.HurtRadius, entity.Position, entity.CollideRadius))
                 {
+                    if (_thorns.IsUnlocked)
+                    {
+                        ExplodeAt(player.Position, _thorns.ExplosionRadius, _thorns.Damage, Color.LightGreen);
+                    }
+                    
                     GGJSoundPlayer.Play("engine/ouch");
                     _playerHitCooldown = 1.25f;
                     _freezeTimer = 0.1f;
@@ -373,6 +452,20 @@ public class VampireCartridge : BasicGameCartridge
                 {
                     GGJSoundPlayer.Play("game/burp", 0.5f, -1f);
                     _world.DestroyEntity(i);
+                    
+                    for(float angle = 0f; angle < MathF.PI*2; angle += MathF.PI / 4)
+                    {
+                        var vfx = new VfxInstance(_world.Entities[i].Position, _world.Entities[i].CollideRadius);
+                        vfx.Tween
+                            .Add(
+                                new MultiplexTween()
+                                    .AddChannel(vfx.Position.TweenTo(vfx.Position + Vector2Extensions.Polar(100, angle), 0.25f, Ease.CubicFastSlow))
+                                    .AddChannel(vfx.Opacity.TweenTo(0f, 0.15f, Ease.Linear))
+                                    .AddChannel(vfx.Radius.TweenTo(10f, 0.15f, Ease.CubicFastSlow))
+                            )
+                            ;
+                        _vfx.Add(vfx);
+                    }
 
                     if (!StoryBeat_Weapons)
                     {
@@ -391,34 +484,62 @@ public class VampireCartridge : BasicGameCartridge
             var bullet = _world.Bullets[bulletIndex];
             if (bullet.IsActive)
             {
-                var foundEntity = -1;
-                for (var entityIndex = 0; entityIndex < _world.Entities.Length; entityIndex++)
+                if (bullet.HitsMultipleTargetsOnSameFrame)
                 {
-                    var entity = _world.Entities[entityIndex];
-                    // THIS USES HURT RADIUS
-                    if (_world.Entities[entityIndex].HurtTimer <= 0 && _world.AreEnemies(bullet, entity) && _world.IsColliding(bullet.Position, bullet.CollideRadius,
-                            entity.Position, entity.HurtRadius))
+                    for (var entityIndex = 0; entityIndex < _world.Entities.Length; entityIndex++)
                     {
-                        foundEntity = entityIndex;
-                        break;
+                        var entity = _world.Entities[entityIndex];
+                        if (IsBulletHittingEntity(entityIndex, bullet, entity))
+                        {
+                            ResolveBulletHitsEntity(bulletIndex, entityIndex, bullet);
+                        }
                     }
+                    
+                    _world.DestroyBullet(bulletIndex);
                 }
+                else
+                {
+                    var foundEntityIndex = -1;
+                    for (var entityIndex = 0; entityIndex < _world.Entities.Length; entityIndex++)
+                    {
+                        var entity = _world.Entities[entityIndex];
+                        if (IsBulletHittingEntity(entityIndex, bullet, entity))
+                        {
+                            foundEntityIndex = entityIndex;
+                            break;
+                        }
+                    }
 
-                if (foundEntity != -1)
-                {
-                    GGJSoundPlayer.Play("game/hit", 0.5f, (Client.Random.Dirty.NextFloat() - 0.5f)/2f);
-                    
-                    _world.Bullets[bulletIndex].CleaveCount--;
-                    if (_world.Bullets[bulletIndex].CleaveCount <= 0)
+                    if (foundEntityIndex != -1)
                     {
-                        _world.DestroyBullet(bulletIndex);
+                        ResolveBulletHitsEntity(bulletIndex, foundEntityIndex, bullet);
                     }
-                    
-                    _world.Entities[foundEntity].Health -= bullet.HitDamage;
-                    _world.Entities[foundEntity].HurtTimer = 0.25f;
                 }
+                
             }
         }
+    }
+
+    private void ResolveBulletHitsEntity(int bulletIndex, int foundEntity, Entity bullet)
+    {
+        GGJSoundPlayer.Play("game/hit", 0.5f, (Client.Random.Dirty.NextFloat() - 0.5f) / 2f);
+
+        _world.Bullets[bulletIndex].CleaveCount--;
+        if (_world.Bullets[bulletIndex].CleaveCount <= 0 && !_world.Bullets[bulletIndex].HitsMultipleTargetsOnSameFrame)
+        {
+            _world.DestroyBullet(bulletIndex);
+        }
+
+        _world.Entities[foundEntity].Health -= bullet.HitDamage;
+        _world.Entities[foundEntity].HurtTimer = 0.25f;
+    }
+
+    private bool IsBulletHittingEntity(int entityIndex, Entity bullet, Entity entity)
+    {
+        // THIS USES HURT RADIUS
+        return _world.Entities[entityIndex].HurtTimer <= 0 && _world.AreEnemies(bullet, entity) &&
+               _world.IsColliding(bullet.Position, bullet.CollideRadius,
+                   entity.Position, entity.HurtRadius);
     }
 
     private void MoveThingsAlongVelocity(float dt)
@@ -646,7 +767,7 @@ public class VampireCartridge : BasicGameCartridge
                     }
                 }
 
-                if (entity.HasTag(Tag.Enemy) && !string.IsNullOrEmpty(entity.Sprite))
+                if ((entity.HasTag(Tag.Enemy) || entity.HasTag(Tag.Bomb)) && !string.IsNullOrEmpty(entity.Sprite))
                 {
                     var texture = Client.Assets.GetTexture(entity.Sprite);
                     var localScale = entity.CollideRadius / texture.Width * 2;
@@ -763,7 +884,7 @@ public class VampireCartridge : BasicGameCartridge
         var color = Color.OrangeRed;
         foreach (var bullet in _world.Bullets)
         {
-            if (bullet.IsActive)
+            if (bullet.IsActive && !bullet.Hide)
             {
                 if (bullet.Sprite != null)
                 {
@@ -788,6 +909,11 @@ public class VampireCartridge : BasicGameCartridge
             }
         }
 
+        painter.EndSpriteBatch();
+        
+        
+        painter.BeginSpriteBatch(_camera.CanvasToScreen);
+        _vfx.Draw(painter);
         painter.EndSpriteBatch();
 
         var smallFont = Client.Assets.GetFont("game/font", 80);
@@ -833,17 +959,19 @@ public class VampireCartridge : BasicGameCartridge
             new DrawSettings {Color = Color.Black.WithMultipliedOpacity(_fadeOverlayOpacity)});
         painter.EndSpriteBatch();
 
+        var textOpacity = 1f;
         if (_gameOver)
         {
             painter.BeginSpriteBatch();
             painter.DrawStringWithinRectangle(bigFont, "GAME OVER", Runtime.Window.RenderResolution.ToRectangleF(),
                 Alignment.Center,
-                new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center});
+                new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center, Color = Color.White.WithMultipliedOpacity(textOpacity)});
             painter.DrawStringWithinRectangle(smallFont, "\n\n\n\nPress Esc to Restart",
                 Runtime.Window.RenderResolution.ToRectangleF(), Alignment.Center, new DrawSettings
                 {
                     Angle = MathF.Sin(_elapsedTime) * 0.1f,
-                    Origin = DrawOrigin.Center
+                    Origin = DrawOrigin.Center,
+                    Color = Color.White.WithMultipliedOpacity(textOpacity)
                 });
             painter.EndSpriteBatch();
         }
@@ -851,14 +979,12 @@ public class VampireCartridge : BasicGameCartridge
         if (StoryBeat_NoEnemies && _elapsedTime > 5)
         {
             painter.BeginSpriteBatch();
-            painter.DrawStringWithinRectangle(bigFont, "BORING", Runtime.Window.RenderResolution.ToRectangleF(),
-                Alignment.Center,
-                new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center});
-            painter.DrawStringWithinRectangle(smallFont, "\n\n\n\nPress Esc to Exit",
+            painter.DrawStringWithinRectangle(smallFont, "Press Esc to Exit",
                 Runtime.Window.RenderResolution.ToRectangleF(), Alignment.Center, new DrawSettings
                 {
                     Angle = MathF.Sin(_elapsedTime) * 0.1f,
-                    Origin = DrawOrigin.Center
+                    Origin = DrawOrigin.Center,
+                    Color = Color.White.WithMultipliedOpacity(textOpacity)
                 });
             painter.EndSpriteBatch();
         }

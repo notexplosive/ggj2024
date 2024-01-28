@@ -220,6 +220,18 @@
 /processorParam:Quality=Best
 /build:game/hit.ogg
 
+#begin game/light-thorny-triskelion.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:game/light-thorny-triskelion.png
+
 #begin game/meat-cleaver.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -334,6 +346,18 @@
 /processorParam:TextureFormat=Color
 /build:game/skeleton.png
 
+#begin game/spiky-eclipse.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:game/spiky-eclipse.png
+
 #begin game/sprint.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -351,6 +375,18 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:game/step.ogg
+
+#begin game/unlit-bomb.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:game/unlit-bomb.png
 
 #begin game/vampire-dracula.png
 /importer:TextureImporter

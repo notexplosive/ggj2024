@@ -77,4 +77,16 @@ public class EntityTemplate
             Sprite = "game/meat-cleaver"
         };
     }
+    
+    public static Entity Bomb()
+    {
+        return new Entity()
+        {
+            HurtRadius = 0,
+            CollideRadius = 64,
+            DetonationTimer = 1,
+            Tags = Tag.Bomb | Tag.Item,
+            Sprite = "game/unlit-bomb"
+        };
+    }
 }

@@ -28,6 +28,9 @@ public struct Entity
     public bool RotateWithVelocity { get; set; } = default;
     public bool Spin { get; set; } = default;
     public int CleaveCount { get; set; } = default;
+    public bool HitsMultipleTargetsOnSameFrame { get; set; } = default;
+    public bool Hide { get; set; } = default;
+    public float DetonationTimer { get; set; } = default;
 
     [Pure]
     public bool HasTag(Tag tag)
