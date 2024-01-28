@@ -15,6 +15,19 @@ public class EntityTemplate
         };
     }
     
+    public static Entity FastEnemy()
+    {
+        return new Entity()
+        {
+            HurtRadius = 100,
+            CollideRadius = 32,
+            Speed = 7,
+            Tags = Tag.Enemy | Tag.Solid,
+            Sprite = "game/spider-alt",
+            MaxHealth = 1
+        };
+    }
+    
     public static Entity Enemy()
     {
         return new Entity()
@@ -24,7 +37,7 @@ public class EntityTemplate
             Speed = 4,
             Tags = Tag.Enemy | Tag.Solid,
             Sprite = "game/skeleton",
-            MaxHealth = 1
+            MaxHealth = 3
         };
     }
     

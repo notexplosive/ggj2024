@@ -31,13 +31,20 @@ public class EnemyWaves
 
             _waves.Add(
                 new EnemyWave(
-                    Trickle(world, camera, EntityTemplate.Enemy, severalMore, shortDuration),
+                    Trickle(world, camera, EntityTemplate.FastEnemy, few, longerDuration)
+                ));
+            
+            _waves.Add(
+                new EnemyWave(
+                    Trickle(world, camera, EntityTemplate.FastEnemy, few, shortDuration),
+                    Trickle(world, camera, EntityTemplate.FastEnemy, several, shortDuration),
                     new WaitSecondsTween(mediumDuration)
                 ));
 
             _waves.Add(
                 new EnemyWave(
                     Trickle(world, camera, EntityTemplate.Enemy, many, mediumDuration),
+                    Burst(world, camera, EntityTemplate.FastEnemy, few),
                     new WaitSecondsTween(longerDuration)
                 ));
 
@@ -57,6 +64,7 @@ public class EnemyWaves
                 new EnemyWave(
                     Burst(world, camera, EntityTemplate.Enemy, several),
                     Trickle(world, camera, EntityTemplate.BigEnemy, few, shortDuration),
+                    Burst(world, camera, EntityTemplate.FastEnemy, many),
                     new WaitSecondsTween(mediumDuration)
                 ));
         }
