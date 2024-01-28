@@ -14,18 +14,19 @@ namespace GGJ2024;
 
 public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
 {
+    private readonly TweenableFloat _buttonActivePercent = new(1f);
     private readonly Font _descriptionFont;
     private readonly Font _headerFont;
     private readonly RectangleF _screen;
-    private readonly Upgrades _upgrades;
-    private readonly Font _titleFont;
-    private readonly TweenableFloat _buttonActivePercent = new(1f);
     private readonly TweenableFloat _titleActivePercent = new(1f);
+    private readonly Font _titleFont;
     private readonly SequenceTween _tween = new();
-    private List<HoverState> _hoverStates = new() { new HoverState(), new HoverState(), new HoverState() };
-    private int _expToNextLevel = 5;
-    private int _exp;
+    private readonly Upgrades _upgrades;
     private List<LevelUpReward> _currentRewards = new();
+    private int _exp;
+    private int _expToNextLevel = 5;
+    private int _hoveredIndex;
+    private int _previousHoverIndex;
 
     public LevelUpOverlay(RectangleF screen, Upgrades upgrades)
     {
@@ -46,14 +47,16 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         var buttons = layout.FindElements("Button");
 
         painter.DrawStringWithinRectangle(_headerFont.WithFontSize((int) (_headerFont.FontSize +
-                                                                          _headerFont.FontSize * _buttonActivePercent /2f)),
+                                                                          _headerFont.FontSize * _buttonActivePercent /
+                                                                          2f)),
             "Level Up!", header.Rectangle.Moved(-new Vector2(-_screen.Height * _titleActivePercent).JustY()),
             Alignment.BottomCenter, new DrawSettings {Color = Color.Yellow});
 
         for (var i = 0; i < buttons.Count; i++)
         {
             var buttonRect = buttons[i];
-            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()), _hoverStates[i].IsHovered, _currentRewards[i]);
+            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()),
+                _hoveredIndex == i, _currentRewards[i]);
         }
     }
 
@@ -73,6 +76,13 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             }
         }
 
+        if (_previousHoverIndex != _hoveredIndex && _hoveredIndex != -1)
+        {
+            GGJSoundPlayer.Play("game/beatbox1");
+        }
+
+        _previousHoverIndex = _hoveredIndex;
+
         if (_tween.IsDone())
         {
             hitTestStack.AddInfiniteZone(Depth.Back, new HoverState());
@@ -82,26 +92,24 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             {
                 var button = list[i];
                 var rectangle = button.Rectangle;
-                hitTestStack.AddZone(rectangle, Depth.Middle, _hoverStates[i]);
+                var index = i;
+                hitTestStack.AddZone(rectangle, Depth.Middle, 
+                    () => { _hoveredIndex = -1; },
+                    () => _hoveredIndex = index);
             }
-            
+
             if (input.Mouse.GetButton(MouseButton.Left).WasPressed)
             {
-                for (int i = 0; i < _hoverStates.Count; i++)
+                if (_hoveredIndex != -1)
                 {
-                    if (_hoverStates[i].IsHovered)
-                    {
-                        SelectUpgrade(i);
-                    }
+                    GGJSoundPlayer.Play("game/beatbox2");
+                    SelectUpgrade(_hoveredIndex);
                 }
             }
         }
         else
         {
-            foreach (var hoverState in _hoverStates)
-            {
-                hoverState.Unset();
-            }
+            _hoveredIndex = -1; 
         }
     }
 
@@ -121,10 +129,7 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             .AddChannel(_titleActivePercent.TweenTo(-1, 0.5f, Ease.CubicFastSlow))
             .AddChannel(_buttonActivePercent.TweenTo(1, 0.5f, Ease.CubicFastSlow))
         );
-        _tween.Add(new CallbackTween(() =>
-        {
-            IsActive = false;
-        }));
+        _tween.Add(new CallbackTween(() => { IsActive = false; }));
     }
 
     public void Show()
@@ -186,14 +191,16 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         {
             button = button.Inflated(10, 10);
         }
-        
-        painter.DrawRectangle(button, new DrawSettings {Color = isHovered ? Color.Green : Color.Green.DimmedBy(0.25f), Depth = Depth.Back});
+
+        painter.DrawRectangle(button,
+            new DrawSettings {Color = isHovered ? Color.Green : Color.Green.DimmedBy(0.25f), Depth = Depth.Back});
         var buttonLayout = CreateButtonLayout(button);
         var headerArea = buttonLayout.FindElement("Header");
         var iconArea = buttonLayout.FindElement("Icon");
         var descriptionArea = buttonLayout.FindElement("Description");
 
-        painter.DrawStringWithinRectangle(_titleFont, reward.Title, headerArea, Alignment.BottomCenter, new DrawSettings());
+        painter.DrawStringWithinRectangle(_titleFont, reward.Title, headerArea, Alignment.BottomCenter,
+            new DrawSettings());
         painter.DrawAsRectangle(Client.Assets.GetTexture(reward.IconName), iconArea, new DrawSettings());
         painter.DrawStringWithinRectangle(_descriptionFont,
             reward.Description, descriptionArea, Alignment.TopCenter,

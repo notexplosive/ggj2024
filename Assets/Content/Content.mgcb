@@ -90,6 +90,42 @@
 #begin engine/pointfree.ttf
 /copy:engine/pointfree.ttf
 
+#begin game/beatbox1.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/beatbox1.ogg
+
+#begin game/beatbox2.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/beatbox2.ogg
+
+#begin game/belch.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/belch.ogg
+
+#begin game/blem.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/blem.ogg
+
+#begin game/bong.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/bong.ogg
+
+#begin game/burp.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/burp.ogg
+
 #begin game/circle.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -177,6 +213,12 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:game/high-grass.png
+
+#begin game/hit.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/hit.ogg
 
 #begin game/menu-theme.ogg
 /importer:OggImporter
@@ -291,6 +333,12 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:game/sprint.png
+
+#begin game/step.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:game/step.ogg
 
 #begin game/vampire-dracula.png
 /importer:TextureImporter

@@ -188,6 +188,7 @@ public class VampireCartridge : BasicGameCartridge
                 Client.Input.Keyboard.GetButton(Keys.LeftShift).WasPressed ||
                 Client.Input.Keyboard.GetButton(Keys.RightShift).WasPressed)
             {
+                GGJSoundPlayer.Play("game/bong", 1f, -1f);
                 _dash.Use(_world.Entities[_world.GetPlayerIndex()]);
             }
         }
@@ -220,9 +221,6 @@ public class VampireCartridge : BasicGameCartridge
 
         _elapsedTime += dt;
 
-        _dash.Update(dt);
-
-        UpdateAllHurtTimers(dt);
 
         if (_gameOver)
         {
@@ -241,6 +239,11 @@ public class VampireCartridge : BasicGameCartridge
             _levelUpScreen.Update(dt);
             return;
         }
+        
+        _dash.Update(dt);
+        UpdateAllHurtTimers(dt);
+
+        PlayMovementSounds();
 
         _world.SpawnFromBuffer();
         if (!_gameOver)
@@ -271,6 +274,14 @@ public class VampireCartridge : BasicGameCartridge
         ConstrainAllEntitiesToLevel();
         MoveThingsAlongVelocity(dt);
         KillDeadThings();
+    }
+
+    private void PlayMovementSounds()
+    {
+        if (!MathUtils.IsVerySmall(_playerMoveVector) && !_gameOver)
+        {
+            GGJSoundPlayer.PlayIfAble("game/step", 0.15f);
+        }
     }
 
     private void UpdateAllHurtTimers(float dt)
@@ -312,6 +323,7 @@ public class VampireCartridge : BasicGameCartridge
                 // THIS USES PLAYER HURT RADIUS
                 if (_world.IsColliding(player.Position, player.HurtRadius, entity.Position, entity.CollideRadius))
                 {
+                    GGJSoundPlayer.Play("engine/ouch");
                     _playerHitCooldown = 1.25f;
                     _freezeTimer = 0.1f;
                     _world.Entities[playerIndex].Health--;
@@ -339,6 +351,7 @@ public class VampireCartridge : BasicGameCartridge
                 }
                 else
                 {
+                    GGJSoundPlayer.Play("game/burp", 0.5f, -1f);
                     _world.DestroyEntity(i);
 
                     if (!StoryBeat_Weapons)
@@ -373,6 +386,7 @@ public class VampireCartridge : BasicGameCartridge
 
                 if (foundEntity != -1)
                 {
+                    GGJSoundPlayer.Play("game/hit", 0.5f, (Client.Random.Dirty.NextFloat() - 0.5f)/2f);
                     _world.DestroyBullet(bulletIndex);
                     _world.Entities[foundEntity].Health -= bullet.HitDamage;
                     _world.Entities[foundEntity].HurtTimer = 0.15f;
@@ -453,9 +467,8 @@ public class VampireCartridge : BasicGameCartridge
     {
         _playerMoveTimer += dt;
         
-        
         if (MathUtils.IsVerySmall(_playerMoveVector))
-        {
+        { 
             _playerMoveDampen = Math.Max(0, _playerMoveDampen - dt * 4);
         } 
         else if (_dash.IsDashing)
@@ -547,6 +560,8 @@ public class VampireCartridge : BasicGameCartridge
                         if (_world.IsColliding(a, b))
                         {
                             _world.DestroyEntity(b);
+                            GGJSoundPlayer.Play("game/blem", 0.75f);
+                            
                             if ((bool) _levelUpScreen?.IncrementExp())
                             {
                                 _world.Entities[a].Health = _world.Entities[a].MaxHealth;

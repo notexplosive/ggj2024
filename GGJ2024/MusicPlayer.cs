@@ -33,8 +33,8 @@ public static class MusicPlayer
 
         MusicPlayer.hasSetup = true;
         
-        MusicPlayer.mainFader = new TweenableFloat(() => MusicPlayer.mainSong.Volume, (val) => MusicPlayer.mainSong.Volume = val);
-        MusicPlayer.menuFader = new TweenableFloat(() => MusicPlayer.menuSong.Volume, (val) => MusicPlayer.menuSong.Volume = val);
+        MusicPlayer.mainFader = new TweenableFloat(0);
+        MusicPlayer.menuFader = new TweenableFloat(0);
     }
 
     public static void FadeToMain()
@@ -72,6 +72,9 @@ public static class MusicPlayer
         if (MusicPlayer.hasSetup)
         {
             MusicPlayer.tween.Update(dt);
+
+            MusicPlayer.mainSong.Volume = MusicPlayer.mainFader.Value * 0.15f;
+            MusicPlayer.menuSong.Volume = MusicPlayer.menuFader.Value * 0.15f;
         }
     }
 }
