@@ -11,6 +11,7 @@ public class EntityTemplate
             HurtRadius = 16,
             CollideRadius = 32,
             Speed = 8,
+            MaxHealth = 5,
             Tags = Tag.Player
         };
     }

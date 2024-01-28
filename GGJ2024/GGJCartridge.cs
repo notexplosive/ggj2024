@@ -75,6 +75,7 @@ public class GGJCartridge : BasicGameCartridge
 
     private void LoadGame()
     {
+        _hostRuntime.HostCartridge.RegenerateCartridge<VampireCartridge>();
         _hostRuntime.HostCartridge.SwapTo<VampireCartridge>();
     }
 

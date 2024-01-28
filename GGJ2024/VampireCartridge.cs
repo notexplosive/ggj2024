@@ -5,8 +5,10 @@ using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Cartridges;
 using ExplogineMonoGame.Data;
+using ExTween;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
 namespace GGJ2024;
 
@@ -14,18 +16,26 @@ public class VampireCartridge : BasicGameCartridge
 {
     private readonly Camera _camera;
     private readonly Decoration[] _decorations;
+    private readonly SequenceTween _introTween = new();
     private readonly List<Ability> _playerAbilities = new();
     private readonly World _world;
     private readonly RectangleF _worldBounds;
+    private float _elapsedTime;
     private bool _gameOver;
     private LevelUpOverlay? _levelUpScreen;
+    private float _playerHitCooldown;
     private float _playerMoveDampen;
     private float _playerMoveTimer;
     private Vector2 _playerMoveVector;
-    private float _spawnWaveTimer;
+    private bool _playerShouldFlicker;
+    private float _spawnWaveTimer = 2;
+    private readonly HostRuntime _hostRuntime;
+    private TweenableFloat _fadeOverlayOpacity = new(1f);
+    private TweenableFloat _barOffsetPercent = new(1f);
 
-    public VampireCartridge(IRuntime runtime) : base(runtime)
+    public VampireCartridge(HostRuntime runtime) : base(runtime)
     {
+        _hostRuntime = runtime;
         _world = new World();
         _camera = new Camera(
             Runtime.Window.RenderResolution.ToRectangleF().Moved(-Runtime.Window.RenderResolution.ToVector2() / 2),
@@ -38,6 +48,24 @@ public class VampireCartridge : BasicGameCartridge
         _world.SpawnEntity(EntityTemplate.Player, new SpawnParameters());
 
         _playerAbilities.Add(new Sword());
+
+        var targetViewBounds = _camera.ViewBounds;
+        _fadeOverlayOpacity.Value = 1f;
+        _introTween
+            .Add(_camera.TweenableViewBounds.CallbackSetTo(_camera.ViewBounds.GetZoomedInBounds(500,_camera.ViewBounds.Center)))
+            .Add(
+                new MultiplexTween()
+                    .AddChannel(_camera.TweenableViewBounds.TweenTo(targetViewBounds, 1f, Ease.CubicFastSlow))
+                    .AddChannel(
+                     new SequenceTween()
+                         .Add(new WaitSecondsTween(0.2f))
+                         .Add(_fadeOverlayOpacity.TweenTo(0f, 0.6f, Ease.Linear))
+                        )
+            )
+            .Add(_barOffsetPercent.TweenTo(-0.05f, 0.25f, Ease.CubicFastSlow))
+            .Add(_barOffsetPercent.TweenTo(0f, 0.15f, Ease.CubicSlowFast))
+            .Add(new WaitSecondsTween(0.5f))
+            ;
     }
 
     public override CartridgeConfig CartridgeConfig { get; } = new(new Point(1920, 1080));
@@ -89,12 +117,23 @@ public class VampireCartridge : BasicGameCartridge
                     colors[decorationSpriteIndex % colors.Length],
                     rectangle);
         }
-        
+
         MusicPlayer.FadeToMain();
     }
 
     public override void UpdateInput(ConsumableInput input, HitTestStack hitTestStack)
     {
+        if (!_introTween.IsDone())
+        {
+            return;
+        }
+        
+        if (input.Keyboard.GetButton(Keys.Escape).WasPressed)
+        {
+            _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
+            _hostRuntime.HostCartridge.SwapTo<GGJCartridge>();
+        }
+
         if (_levelUpScreen != null && _levelUpScreen.IsActive)
         {
             _levelUpScreen.UpdateInput(input, hitTestStack);
@@ -115,7 +154,20 @@ public class VampireCartridge : BasicGameCartridge
 
     public override void Update(float dt)
     {
+        _elapsedTime += dt;
         if (!Runtime.Window.IsInFocus)
+        {
+            return;
+        }
+        
+        if(_gameOver)
+        {
+            EnemyJeers();
+        }
+        
+        _introTween.Update(dt);
+
+        if (!_introTween.IsDone())
         {
             return;
         }
@@ -127,16 +179,62 @@ public class VampireCartridge : BasicGameCartridge
         }
 
         _world.SpawnFromBuffer();
-        MovePlayer(dt);
-        CollectExp(dt);
-        MoveEnemiesTowardsPlayer(dt);
-        AdjustCamera(dt);
+        if (!_gameOver)
+        {
+            MovePlayer(dt);
+            MoveEnemiesTowardsPlayer(dt);
+
+            if (_introTween.IsDone())
+            {
+                AdjustCamera(dt);
+            }
+
+            RunPlayerAbilities(dt);
+            CalculateBulletCollision();
+            CollectExp(dt);
+            CalculatePlayerHurt(dt);
+            SpawnWaves(dt);
+        }
+
         ConstrainAllEntitiesToLevel();
-        RunPlayerAbilities(dt);
-        CalculateBulletCollision();
         MoveThingsAlongVelocity(dt);
         KillDeadThings();
-        SpawnWaves(dt);
+    }
+
+    private void EnemyJeers()
+    {
+        for (var i = 0; i < _world.Entities.Length; i++)
+        {
+            if (_world.Entities[i].HasTag(Tag.Enemy))
+            {
+                _world.Entities[i].Angle = MathF.Sin(_elapsedTime * 20f + i) * 0.3f;
+            }
+        }
+    }
+
+    private void CalculatePlayerHurt(float dt)
+    {
+        if (_playerHitCooldown > 0)
+        {
+            _playerHitCooldown -= dt;
+            return;
+        }
+
+        var playerIndex = _world.GetPlayerIndex();
+        var player = _world.Entities[playerIndex];
+        foreach (var entity in _world.Entities)
+        {
+            if (entity.HasTag(Tag.Enemy))
+            {
+                // THIS USES PLAYER HURT RADIUS
+                if (_world.IsColliding(player.Position, player.HurtRadius, entity.Position, entity.CollideRadius))
+                {
+                    _playerHitCooldown = 2f;
+                    _world.Entities[playerIndex].Health--;
+                    break;
+                }
+            }
+        }
     }
 
     private void SpawnWaves(float dt)
@@ -150,7 +248,7 @@ public class VampireCartridge : BasicGameCartridge
             var edges = new[] {RectEdge.Left, RectEdge.Right, RectEdge.Bottom, RectEdge.Top};
 
             // todo: waves
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 10; i++)
             {
                 var edge = Client.Random.Clean.GetRandomElement(edges);
                 var point = VampireCartridge.GetRandomPointAlongEdge(_camera.ViewBounds.Inflated(64, 64), edge);
@@ -186,7 +284,12 @@ public class VampireCartridge : BasicGameCartridge
             {
                 if (i == playerIndex)
                 {
-                    _gameOver = true;
+                    if (!_gameOver)
+                    {
+                        _gameOver = true;
+                        _introTween.Add(_fadeOverlayOpacity.TweenTo(0.25f, 0.25f, Ease.Linear));
+                        MusicPlayer.FadeOut();
+                    }
                 }
                 else
                 {
@@ -209,7 +312,9 @@ public class VampireCartridge : BasicGameCartridge
                 for (var entityIndex = 0; entityIndex < _world.Entities.Length; entityIndex++)
                 {
                     var entity = _world.Entities[entityIndex];
-                    if (_world.AreEnemies(bullet, entity) && _world.IsColliding(bullet, entity))
+                    // THIS USES HURT RADIUS
+                    if (_world.AreEnemies(bullet, entity) && _world.IsColliding(bullet.Position, bullet.CollideRadius,
+                            entity.Position, entity.HurtRadius))
                     {
                         foundEntity = entityIndex;
                         break;
@@ -378,6 +483,7 @@ public class VampireCartridge : BasicGameCartridge
     {
         var scale = 0.25f;
 
+        painter.Clear(Color.Green.DesaturatedBy(0.8f).DimmedBy(0.2f));
         painter.BeginSpriteBatch(_camera.CanvasToScreen);
         painter.DrawLineRectangle(_worldBounds, new LineDrawSettings());
         painter.EndSpriteBatch();
@@ -415,33 +521,69 @@ public class VampireCartridge : BasicGameCartridge
                         new DrawSettings
                         {
                             Origin = DrawOrigin.Center,
-                            Color = bodyColor
+                            Color = bodyColor,
+                            Angle = entity.Angle
                         });
                 }
                 else if (entity.HasTag(Tag.Player))
                 {
-                    Texture2D texture;
-
-                    if (MathUtils.IsVerySmall(_playerMoveVector) || _playerMoveVector.X == 0)
+                    if (!_gameOver)
                     {
-                        texture = Client.Assets.GetTexture("game/person");
-                    }
-                    else
-                    {
-                        texture = Client.Assets.GetTexture("game/walk");
-                    }
+                        Texture2D texture;
 
-                    var flipX = _playerMoveVector.X < 0;
-
-                    painter.DrawAtPosition(texture, entity.Position + new Vector2(0, texture.Height / 2f * scale),
-                        new Scale2D(scale),
-                        new DrawSettings
+                        if (MathUtils.IsVerySmall(_playerMoveVector) || _playerMoveVector.X == 0)
                         {
-                            Flip = new XyBool(flipX, false),
-                            Origin = new DrawOrigin(new Vector2(texture.Width / 2f, texture.Height)),
-                            Angle = MathF.Sin(_playerMoveTimer * 30f) * _playerMoveDampen / 5,
-                            Color = bodyColor
-                        });
+                            texture = Client.Assets.GetTexture("game/person");
+                        }
+                        else
+                        {
+                            texture = Client.Assets.GetTexture("game/walk");
+                        }
+
+                        var flipX = _playerMoveVector.X < 0;
+
+                        if (_playerHitCooldown > 0)
+                        {
+                            _playerShouldFlicker = !_playerShouldFlicker;
+                        }
+                        else
+                        {
+                            _playerShouldFlicker = false;
+                        }
+
+                        var flickerOpacity = 1f;
+                        if (_playerShouldFlicker)
+                        {
+                            bodyColor = Color.Red;
+                            flickerOpacity = 0.25f;
+                        }
+
+                        if(_introTween.IsDone()){
+                            painter.DrawRectangle(
+                                new RectangleF(
+                                    entity.Position - new Vector2(texture.Width / 2f * scale,
+                                        texture.Height / 2f * scale + 40),
+                                    new Vector2(texture.Width * scale, 20)),
+                                new DrawSettings {Color = Color.DarkRed.DimmedBy(0.25f), Depth = Depth.Back});
+
+                            painter.DrawRectangle(
+                                new RectangleF(
+                                    entity.Position - new Vector2(texture.Width / 2f * scale,
+                                        texture.Height / 2f * scale + 40),
+                                    new Vector2(texture.Width * scale * ((float) entity.Health / entity.MaxHealth), 20)),
+                                new DrawSettings {Color = Color.DarkRed, Depth = Depth.Back - 10});
+                        }
+
+                        painter.DrawAtPosition(texture, entity.Position + new Vector2(0, texture.Height / 2f * scale),
+                            new Scale2D(scale),
+                            new DrawSettings
+                            {
+                                Flip = new XyBool(flipX, false),
+                                Origin = new DrawOrigin(new Vector2(texture.Width / 2f, texture.Height)),
+                                Angle = MathF.Sin(_playerMoveTimer * 30f) * _playerMoveDampen / 5,
+                                Color = bodyColor.WithMultipliedOpacity(flickerOpacity)
+                            });
+                    }
                 }
                 else if (entity.HasTag(Tag.Exp))
                 {
@@ -483,36 +625,63 @@ public class VampireCartridge : BasicGameCartridge
 
         painter.EndSpriteBatch();
 
-        painter.BeginSpriteBatch();
-        var insetScreen = Runtime.Window.RenderResolution.ToRectangleF().Inflated(0, -100);
+        var smallFont = Client.Assets.GetFont("game/font", 80);
+        var bigFont = Client.Assets.GetFont("game/font", 256);
 
-        var font = Client.Assets.GetFont("game/font", 64);
-        var y = insetScreen.Top - font.Height;
-
-        var expBar = RectangleF.FromSizeAlignedWithin(insetScreen, new Vector2(insetScreen.Width - 100, 50),
-            Alignment.TopCenter);
-
-        painter.DrawStringWithinRectangle(font, "Wave 1",
-            new RectangleF(new Vector2(expBar.X, y), new Vector2(expBar.Width, font.Height)), Alignment.BottomCenter,
-            new DrawSettings());
-        painter.DrawRectangle(expBar, new DrawSettings {Color = Color.Yellow.DimmedBy(0.5f), Depth = Depth.Back});
-
-        var percent = _levelUpScreen?.Percent() ?? 0;
-        var expFill = expBar.ResizedOnEdge(RectEdge.Right, new Vector2(-expBar.Width * (1 - percent), 0));
-        painter.DrawRectangle(expFill, new DrawSettings {Color = Color.Yellow, Depth = Depth.Middle});
-        painter.EndSpriteBatch();
-
-        if (_levelUpScreen != null && _levelUpScreen.IsActive)
+        if (!_gameOver)
         {
             painter.BeginSpriteBatch();
-            painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(),
-                new DrawSettings {Color = Color.Black.WithMultipliedOpacity(0.75f)});
+            var insetScreen = Runtime.Window.RenderResolution.ToRectangleF().Inflated(0, -100);
+            insetScreen = insetScreen.Moved(-insetScreen.Size.JustY() * _barOffsetPercent);
+
+            var y = insetScreen.Top - smallFont.Height;
+
+            var expBar = RectangleF.FromSizeAlignedWithin(insetScreen, new Vector2(insetScreen.Width - 100, 50),
+                Alignment.TopCenter);
+
+            painter.DrawStringWithinRectangle(smallFont, "Wave 1",
+                new RectangleF(new Vector2(expBar.X, y), new Vector2(expBar.Width, smallFont.Height)),
+                Alignment.BottomCenter,
+                new DrawSettings());
+            painter.DrawRectangle(expBar, new DrawSettings {Color = Color.Yellow.DimmedBy(0.5f), Depth = Depth.Back});
+
+            var percent = _levelUpScreen?.Percent() ?? 0;
+            var expFill = expBar.ResizedOnEdge(RectEdge.Right, new Vector2(-expBar.Width * (1 - percent), 0));
+            painter.DrawRectangle(expFill, new DrawSettings {Color = Color.Yellow, Depth = Depth.Middle});
             painter.EndSpriteBatch();
 
+            if (_levelUpScreen != null && _levelUpScreen.IsActive)
+            {
+                painter.BeginSpriteBatch();
+                painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(),
+                    new DrawSettings {Color = Color.Black.WithMultipliedOpacity(0.75f)});
+                painter.EndSpriteBatch();
+
+                painter.BeginSpriteBatch();
+                _levelUpScreen.Draw(painter);
+                painter.EndSpriteBatch();
+            }
+        }
+        
+        painter.BeginSpriteBatch();
+        painter.DrawRectangle(Runtime.Window.RenderResolution.ToRectangleF(), new DrawSettings{Color = Color.Black.WithMultipliedOpacity(_fadeOverlayOpacity)});
+        painter.EndSpriteBatch();
+        
+        if(_gameOver)
+        {
             painter.BeginSpriteBatch();
-            _levelUpScreen.Draw(painter);
+            painter.DrawStringWithinRectangle(bigFont, "GAME OVER", Runtime.Window.RenderResolution.ToRectangleF(),
+                Alignment.Center,
+                new DrawSettings {Angle = MathF.Sin(_elapsedTime) * 0.1f, Origin = DrawOrigin.Center});
+            painter.DrawStringWithinRectangle(smallFont, "\n\n\n\nPress Esc to Restart",
+                Runtime.Window.RenderResolution.ToRectangleF(), Alignment.Center, new DrawSettings
+                {
+                    Angle = MathF.Sin(_elapsedTime) * 0.1f,
+                    Origin = DrawOrigin.Center
+                });
             painter.EndSpriteBatch();
         }
+        
     }
 
     public override void AddCommandLineParameters(CommandLineParametersWriter parameters)

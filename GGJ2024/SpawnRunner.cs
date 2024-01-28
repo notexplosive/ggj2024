@@ -9,13 +9,15 @@ public static class SpawnRunner
 {
     public static Entity Run(Func<Entity> spawnAction, SpawnParameters spawnParameters)
     {
-        var entity = spawnAction() with
+        var spawned = spawnAction();
+        var entity = spawned with
         {
             Position = spawnParameters.Position,
             Velocity = spawnParameters.Velocity,
             
             // Basics
-            IsActive = true
+            IsActive = true,
+            Health = spawned.MaxHealth
         };
 
         return entity;
