@@ -32,6 +32,7 @@ public class VampireCartridge : BasicGameCartridge
     private readonly HostRuntime _hostRuntime;
     private TweenableFloat _fadeOverlayOpacity = new(1f);
     private TweenableFloat _barOffsetPercent = new(1f);
+    private Dash _dash = new();
 
     public VampireCartridge(HostRuntime runtime) : base(runtime)
     {
@@ -142,12 +143,24 @@ public class VampireCartridge : BasicGameCartridge
 
         var inputVector = InputCalculations.CalculateInputVector(input);
 
-        for (var i = 0; i < _world.Entities.Length; i++)
+        if (_dash.CanUse() && !MathUtils.IsVerySmall(inputVector))
         {
-            var entity = _world.Entities[i];
-            if (entity.HasTag(Tag.Player))
+            if (Client.Input.Keyboard.GetButton(Keys.Space).WasPressed ||
+                Client.Input.Keyboard.GetButton(Keys.LeftShift).WasPressed)
             {
-                _playerMoveVector = inputVector;
+                _dash.Use(_world.Entities[_world.GetPlayerIndex()]);
+            }
+        }
+
+        if (!_dash.IsDashing)
+        {
+            for (var i = 0; i < _world.Entities.Length; i++)
+            {
+                var entity = _world.Entities[i];
+                if (entity.HasTag(Tag.Player))
+                {
+                    _playerMoveVector = inputVector;
+                }
             }
         }
     }
@@ -160,6 +173,8 @@ public class VampireCartridge : BasicGameCartridge
         }
         
         _elapsedTime += dt;
+        
+        _dash.Update(dt);
 
         UpdateAllHurtTimers(dt);
         
@@ -228,7 +243,7 @@ public class VampireCartridge : BasicGameCartridge
 
     private void CalculatePlayerHurt(float dt)
     {
-        if (_playerHitCooldown > 0)
+        if (_playerHitCooldown > 0 || _dash.IsDashing)
         {
             _playerHitCooldown -= dt;
             return;
@@ -427,7 +442,14 @@ public class VampireCartridge : BasicGameCartridge
 
         var playerIndex = _world.GetPlayerIndex();
 
-        _world.Entities[playerIndex].Position += _playerMoveVector * _world.Entities[playerIndex].Speed * dt * 60;
+        var speed = _world.Entities[playerIndex].Speed;
+
+        if (_dash.IsDashing)
+        {
+            speed = _dash.Speed;
+        }
+        
+        _world.Entities[playerIndex].Position += _playerMoveVector * speed * dt * 60;
     }
 
     private void MoveEnemiesTowardsPlayer(float dt)
@@ -530,6 +552,11 @@ public class VampireCartridge : BasicGameCartridge
                 if (entity.HasTag(Tag.Player))
                 {
                     bodyColor = ColorExtensions.FromRgbHex(0xff8000);
+
+                    if (_dash.IsDashing)
+                    {
+                        bodyColor = Color.LightBlue;
+                    }
                 }
 
                 if (entity.HasTag(Tag.Enemy) && !string.IsNullOrEmpty(entity.Sprite))
@@ -579,6 +606,7 @@ public class VampireCartridge : BasicGameCartridge
                         }
 
                         if(_introTween.IsDone()){
+                            // health bar
                             painter.DrawRectangle(
                                 new RectangleF(
                                     entity.Position - new Vector2(texture.Width / 2f * scale,
@@ -592,6 +620,14 @@ public class VampireCartridge : BasicGameCartridge
                                         texture.Height / 2f * scale + 40),
                                     new Vector2(texture.Width * scale * ((float) entity.Health / entity.MaxHealth), 20)),
                                 new DrawSettings {Color = Color.DarkRed, Depth = Depth.Back - 10});
+                            
+                            // dash
+                            painter.DrawRectangle(
+                                new RectangleF(
+                                    entity.Position - new Vector2(texture.Width / 2f * scale,
+                                        texture.Height / 2f * scale + 40),
+                                    new Vector2(texture.Width * scale * Math.Min(1,1 - _dash.CurrentCooldown / _dash.TotalCooldown), 10)).Moved(new Vector2(0,20)),
+                                new DrawSettings {Color = Color.LightBlue, Depth = Depth.Back - 10});
                         }
 
                         painter.DrawAtPosition(texture, entity.Position + new Vector2(0, texture.Height / 2f * scale),
