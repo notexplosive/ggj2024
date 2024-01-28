@@ -1,6 +1,8 @@
-﻿using ExplogineCore.Data;
+﻿using System.Collections.Generic;
+using ExplogineCore.Data;
 using ExplogineMonoGame;
 using ExplogineMonoGame.Data;
+using ExplogineMonoGame.Input;
 using ExplogineMonoGame.Layout;
 using ExplogineMonoGame.Rails;
 using ExTween;
@@ -18,6 +20,9 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
     private readonly TweenableFloat _buttonActivePercent = new(1f);
     private readonly TweenableFloat _titleActivePercent = new(1f);
     private readonly SequenceTween _tween = new();
+    private List<HoverState> _hoverStates = new() { new HoverState(), new HoverState(), new HoverState() };
+    private int _expToNextLevel = 10;
+    private int _exp;
 
     public LevelUpOverlay(RectangleF screen)
     {
@@ -41,9 +46,10 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
             "Level Up!", header.Rectangle.Moved(-new Vector2(-_screen.Height * _titleActivePercent).JustY()),
             Alignment.BottomCenter, new DrawSettings {Color = Color.Yellow});
 
-        foreach (var buttonRect in buttons)
+        for (var i = 0; i < buttons.Count; i++)
         {
-            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()));
+            var buttonRect = buttons[i];
+            DrawButton(painter, buttonRect.Rectangle.Moved(new Vector2(_screen.Height * _buttonActivePercent).JustY()), _hoverStates[i].IsHovered);
         }
     }
 
@@ -56,8 +62,61 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
     {
         if (Client.Debug.IsPassiveOrActive && input.Keyboard.GetButton(Keys.Escape, true).WasPressed)
         {
+            // debug rest
             Show();
         }
+
+        if (_tween.IsDone())
+        {
+            hitTestStack.AddInfiniteZone(Depth.Back, new HoverState());
+            var layout = Layout();
+            var list = layout.FindElements("Button");
+            for (var i = 0; i < list.Count; i++)
+            {
+                var button = list[i];
+                var rectangle = button.Rectangle;
+                hitTestStack.AddZone(rectangle, Depth.Middle, _hoverStates[i]);
+            }
+            
+            if (input.Mouse.GetButton(MouseButton.Left).WasPressed)
+            {
+                for (int i = 0; i < _hoverStates.Count; i++)
+                {
+                    if (_hoverStates[i].IsHovered)
+                    {
+                        SelectUpgrade(i);
+                    }
+                }
+            }
+        }
+        else
+        {
+            foreach (var hoverState in _hoverStates)
+            {
+                hoverState.Unset();
+            }
+        }
+    }
+
+    private void SelectUpgrade(int i)
+    {
+        // apply upgrade
+        _expToNextLevel = (int) (_expToNextLevel * 1.5f);
+        _exp = 0;
+        Hide();
+    }
+
+    private void Hide()
+    {
+        _tween.Clear();
+        _tween.Add(new MultiplexTween()
+            .AddChannel(_titleActivePercent.TweenTo(-1, 0.5f, Ease.CubicFastSlow))
+            .AddChannel(_buttonActivePercent.TweenTo(1, 0.5f, Ease.CubicFastSlow))
+        );
+        _tween.Add(new CallbackTween(() =>
+        {
+            IsActive = false;
+        }));
     }
 
     public void Show()
@@ -111,10 +170,15 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         return root.Bake(rectangle);
     }
 
-    private void DrawButton(Painter painter, RectangleF button)
+    private void DrawButton(Painter painter, RectangleF button, bool isHovered)
     {
-        painter.DrawRectangle(button, new DrawSettings {Color = Color.DarkBlue, Depth = Depth.Back});
 
+        if (isHovered)
+        {
+            button = button.Inflated(10, 10);
+        }
+        
+        painter.DrawRectangle(button, new DrawSettings {Color = isHovered ? Color.Blue : Color.DarkBlue, Depth = Depth.Back});
         var buttonLayout = CreateButtonLayout(button);
         var headerArea = buttonLayout.FindElement("Header");
         var iconArea = buttonLayout.FindElement("Icon");
@@ -124,5 +188,20 @@ public class LevelUpOverlay : IUpdateInputHook, IDrawHook, IUpdateHook
         painter.DrawStringWithinRectangle(_descriptionFont,
             "Lorem ipsum dolor sit amet sadg asdf dasdf waef awef awef awef.", descriptionArea, Alignment.TopCenter,
             new DrawSettings());
+    }
+
+    public void IncrementExp()
+    {
+        _exp++;
+
+        if (_exp >= _expToNextLevel)
+        {
+            Show();
+        }
+    }
+
+    public float Percent()
+    {
+        return (float) _exp / _expToNextLevel;
     }
 }

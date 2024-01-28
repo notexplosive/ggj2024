@@ -15,11 +15,9 @@ public class VampireCartridge : BasicGameCartridge
 {
     private readonly Camera _camera;
     private readonly Decoration[] _decorations;
-    private readonly int _expToNextLevel = 10;
     private readonly List<Ability> _playerAbilities = new();
     private readonly World _world;
     private readonly RectangleF _worldBounds;
-    private int _exp;
     private bool _gameOver;
     private float _playerMoveDampen;
     private float _playerMoveTimer;
@@ -373,12 +371,7 @@ public class VampireCartridge : BasicGameCartridge
                         if (_world.IsColliding(a, b))
                         {
                             _world.DestroyEntity(b);
-                            _exp++;
-
-                            if (_exp >= _expToNextLevel)
-                            {
-                                _levelUpScreen?.Show();
-                            }
+                            _levelUpScreen?.IncrementExp();
                         }
                     }
                 }
@@ -509,7 +502,7 @@ public class VampireCartridge : BasicGameCartridge
             new DrawSettings());
         painter.DrawRectangle(expBar, new DrawSettings {Color = Color.Yellow.DimmedBy(0.5f), Depth = Depth.Back});
 
-        var percent = (float) _exp / _expToNextLevel;
+        var percent = _levelUpScreen.Percent();
         var expFill = expBar.ResizedOnEdge(RectEdge.Right, new Vector2(-expBar.Width * (1 - percent), 0));
         painter.DrawRectangle(expFill, new DrawSettings {Color = Color.Yellow, Depth = Depth.Middle});
         painter.EndSpriteBatch();
