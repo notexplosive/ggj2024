@@ -1,0 +1,108 @@
+{
+    "Dialogue": [
+        {
+            "Animation": "FastWake"
+        },
+        {
+            "Animation": "Happy",
+            "Text": "You did it!"
+        },
+        {
+            "Animation": "Blink",
+            "Duration": 0.5
+        },
+        {
+            "Animation": "Focused",
+            "Text": "Actually, it goes on forever.",
+            "Tilt": -0.2
+        },
+        {
+            "Animation": "Blink",
+            "Duration": 0.5
+        },
+        {
+            "Animation": "Idle",
+            "Text": "But my job is to entertain."
+        },
+        {
+            "Animation": "Focused",
+            "Text": "I don't want to overstay my welcome.",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            }
+        },
+        {
+            "Animation": "Idle",
+            "Text": "You can keep playing if you want.",
+            "Tilt": 0.3
+        },
+        {
+            "Animation": "Happy",
+            "Text": "But in case you don't, they asked me to read this to you."
+        },
+        {
+            "Animation": "Blink",
+        },
+        {
+            "Animation": "Focused",
+            "Text": "\"This game was made in 48 hours for Global Game Jam.\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            }
+        },
+        {
+            "Animation": "Blink",
+            "Duration": 0.5,
+            "Position": {
+                "x": 0.5,
+                "y": 0.5
+            }
+        },
+        {
+            "Animation": "Idle",
+            "Text": "\"By NotExplosive\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.5
+            }
+        },
+        {
+            "Animation": "Happy",
+            "Text": "\"At the Museum of Art and Digital Entertainment\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            }
+        },
+        {
+            "Animation": "Focused",
+            "Text": "\"Oakland, California.\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            }
+        },
+        {
+            "Animation": "Idle",
+            "Text": "\"Music by Jay Kim.\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            }
+        },
+        {
+            "Animation": "Happy",
+            "Text": "\"Thanks for playing.\"",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            }
+        },
+        {
+            "Animation": "Closed",
+            "Duration": 2
+        },
+    ]
+}

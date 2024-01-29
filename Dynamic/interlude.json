@@ -4,7 +4,8 @@
             "Animation": "FastWake"
         },
         {
-            "Animation": "Happy"
+            "Animation": "Happy",
+            "Text": "Try again. Talk to me again when you complete Wave 20"
         },
         {
             "Animation": "Blink",

@@ -182,6 +182,12 @@ public class VampireCartridge : BasicGameCartridge
             _introTween.Add(new CallbackTween(() =>
             {
                 _hostRuntime.HostCartridge.StoryProgress++;
+
+                if (_waves.CurrentIndex >= 20)
+                {
+                    _hostRuntime.HostCartridge.HasWon = true;
+                }
+                
                 _hostRuntime.HostCartridge.RegenerateCartridge<GGJCartridge>();
                 _hostRuntime.HostCartridge.SwapTo<GGJCartridge>();
             }));
@@ -231,8 +237,8 @@ public class VampireCartridge : BasicGameCartridge
         vfx.Angle.Value = Client.Random.Dirty.NextFloat(0, MathF.PI * 2);
         vfx.BaseColor = color ?? Color.White;
         vfx.Tween
-            .Add(vfx.Radius.TweenTo(explosionRadius * 1.2f, 0.15f, Ease.CubicFastSlow))
-            .Add(vfx.Opacity.TweenTo(0, 0.5f, Ease.CubicFastSlow))
+            .Add(vfx.Radius.TweenTo(explosionRadius * 1.2f, 0.15f, Ease.Linear))
+            .Add(vfx.Opacity.TweenTo(0, 0.1f, Ease.Linear))
             ;
         _vfx.Add(vfx);
         _world.SpawnBullet(() => new Entity()

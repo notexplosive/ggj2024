@@ -1,0 +1,34 @@
+{
+    "Dialogue": [
+        {
+            "Animation": "FastWake"
+        },
+        {
+            "Animation": "None",
+            "Text": "I think this game is similar to another game."
+        },
+        {
+            "Animation": "Sad",
+            "Text": "That was popular a year ago.",
+            "Position": {
+                "x": 0.5,
+                "y": 0.6
+            },
+        },
+        {
+            "Animation": "Blink"
+        },
+        {
+            "Animation": "Happy",
+            "Text": "But I haven't played it!",
+        },
+        {
+            "Animation": "None",
+            "Text": "This is my spin on what I think that game is."
+        },
+        {
+            "Animation": "Closed",
+            "Duration": 2
+        },
+    ]
+}

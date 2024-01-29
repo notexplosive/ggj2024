@@ -23,7 +23,7 @@
             },
         },
         {
-            "Animation": "None",
+            "Animation": "Idle",
             "Text": "You can press SPACE or SHIFT to dash.",
             "Position": {
                 "x": 0.7,
@@ -31,7 +31,7 @@
             },
         },
         {
-            "Animation": "None",
+            "Animation": "Happy",
             "Text": "And I'm giving you a weapon you can use to fight enemies.",
             "Position": {
                 "x": 0.5,

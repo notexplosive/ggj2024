@@ -4,7 +4,7 @@
             "Animation": "FastWake"
         },
         {
-            "Animation": "None",
+            "Animation": "Happy",
             "Text": "OK! I got it!"
         },
         {
@@ -23,7 +23,7 @@
             },
         },
         {
-            "Animation": "None",
+            "Animation": "Idle",
             "Text": "You need to level up.",
         },
         {

@@ -84,7 +84,6 @@ public class Upgrades
         _rewards.Add(new LevelUpReward("Swing Faster", "game/plain-dagger",
             null,
             new SpecificUpgradeSequence(
-                new DeltaFloatUpgrade(stats.SwordCooldown, 0.2f),
                 new DeltaFloatUpgrade(stats.SwordCooldown, -0.2f),
                 new DeltaFloatUpgrade(stats.SwordCooldown, -0.2f),
                 new DeltaFloatUpgrade(stats.SwordCooldown, -0.2f)

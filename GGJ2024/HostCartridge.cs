@@ -7,6 +7,8 @@ namespace GGJ2024;
 public class HostCartridge : HotReloadCartridge
 {
     public int StoryProgress { get; set; } = 0;
+    public bool IsPostGame { get; set; }
+    public bool HasWon { get; set; }
 
     public HostCartridge(IRuntime runtime, params Cartridge[] startingCartridges) : base(runtime, startingCartridges)
     {

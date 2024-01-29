@@ -30,13 +30,25 @@ public class GGJCartridge : BasicGameCartridge
     {
         var dialogues = new List<string>
         {
+            "Dynamic/end.json",
             "Dynamic/intro.json",
             "Dynamic/intro2.json",
             "Dynamic/intro3.json",
             "Dynamic/intro4.json",
+            "Dynamic/intro5.json",
         };
 
-        var dialoguePath = "Dynamic/end.json";
+        var dialoguePath = "Dynamic/interlude.json";
+        if (_hostRuntime.HostCartridge.IsPostGame)
+        {
+            dialoguePath = "Dynamic/postgame_interlude.json";
+        }
+        else if (_hostRuntime.HostCartridge.HasWon)
+        {
+            dialoguePath = "Dynamic/ending.json";
+            _hostRuntime.HostCartridge.IsPostGame = true;
+        }
+        
         if (dialogues.IsValidIndex(_hostRuntime.HostCartridge.StoryProgress))
         {
             dialoguePath = dialogues[_hostRuntime.HostCartridge.StoryProgress];
@@ -146,6 +158,9 @@ public class GGJCartridge : BasicGameCartridge
     {
         painter.BeginSpriteBatch();
         _face?.Draw(painter);
+        painter.EndSpriteBatch();
+        
+        painter.BeginSpriteBatch();
         _animatedText?.Draw(painter);
         painter.EndSpriteBatch();
     }
