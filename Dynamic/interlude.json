@@ -8,8 +8,7 @@
             "Text": "Try again. Talk to me again when you complete Wave 10"
         },
         {
-            "Animation": "Blink",
-            "Duration": 0.5
+            "Animation": "Blink"
         },
         {
             "Animation": "Closed",

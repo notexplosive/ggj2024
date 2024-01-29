@@ -38,19 +38,21 @@ public class GGJCartridge : BasicGameCartridge
         };
 
         var dialoguePath = "Dynamic/interlude.json";
+        
         if (_hostRuntime.HostCartridge.IsPostGame)
         {
             dialoguePath = "Dynamic/postgame_interlude.json";
-        }
-        else if (_hostRuntime.HostCartridge.HasWon)
-        {
-            dialoguePath = "Dynamic/ending.json";
-            _hostRuntime.HostCartridge.IsPostGame = true;
         }
         
         if (dialogues.IsValidIndex(_hostRuntime.HostCartridge.StoryProgress))
         {
             dialoguePath = dialogues[_hostRuntime.HostCartridge.StoryProgress];
+        }
+        
+        if (_hostRuntime.HostCartridge.HasWon && !_hostRuntime.HostCartridge.IsPostGame)
+        {
+            dialoguePath = "Dynamic/ending.json";
+            _hostRuntime.HostCartridge.IsPostGame = true;
         }
         
         _cutscene = JsonConvert.DeserializeObject<Cutscene>(
