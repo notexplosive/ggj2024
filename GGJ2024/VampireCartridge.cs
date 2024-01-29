@@ -183,7 +183,8 @@ public class VampireCartridge : BasicGameCartridge
             {
                 _hostRuntime.HostCartridge.StoryProgress++;
 
-                if (_waves.CurrentIndex >= 20)
+                // Win the game at 10 waves
+                if (_waves.CurrentIndex >= 10)
                 {
                     _hostRuntime.HostCartridge.HasWon = true;
                 }
@@ -319,7 +320,13 @@ public class VampireCartridge : BasicGameCartridge
         {
             if (!StoryBeat_NoEnemies)
             {
-                _waves.Update(dt);
+                var multiplier = 1f;
+
+                if (StoryBeat_Monsters || StoryBeat_Weapons)
+                {
+                    multiplier = 3;
+                }
+                _waves.Update(dt * multiplier);
             }
 
             MovePlayer(dt);

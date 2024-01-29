@@ -8,7 +8,7 @@
             "Text": "Maybe Monsters isn't enough to make the game fun."
         },
         {
-            "Animation": "Happy",
+            "Animation": "Mad",
             "Text": "You need a way to defend yourself."
         },
         {
@@ -29,6 +29,7 @@
                 "x": 0.7,
                 "y": 0.5
             },
+            "Tilt": 0.5
         },
         {
             "Animation": "Happy",
@@ -40,17 +41,6 @@
         },
         {
             "Animation": "Blink",
-        },
-        {
-            "Animation": "Focused",
-            "Text": "I'm not sure what button to bind it to."
-        },
-        {
-            "Animation": "Blink",
-        },
-        {
-            "Animation": "None",
-            "Text": "I'll just make it auto-attack for now."
         },
         {
             "Text": "Good luck!",

@@ -30,7 +30,6 @@ public class GGJCartridge : BasicGameCartridge
     {
         var dialogues = new List<string>
         {
-            "Dynamic/end.json",
             "Dynamic/intro.json",
             "Dynamic/intro2.json",
             "Dynamic/intro3.json",

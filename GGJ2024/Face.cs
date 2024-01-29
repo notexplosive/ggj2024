@@ -204,7 +204,7 @@ public class Face : IDrawHook, IUpdateHook
         {
             return new MultiplexTween()
                     .AddChannel(_browTilt.TweenTo(0.15f, duration, Ease.CubicFastSlow))
-                    .AddChannel(_lowerOpen.TweenTo(0.65f, duration, Ease.CubicFastSlow))
+                    .AddChannel(_lowerOpen.TweenTo(0.5f, duration, Ease.CubicFastSlow))
                     .AddChannel(_openAmount.TweenTo(1f, duration, Ease.CubicFastSlow))
                     .AddChannel(RadiusFactor.TweenTo(1f, duration, Ease.CubicFastSlow))
                 ;

@@ -16,19 +16,27 @@
         },
         {
             "Animation": "Focused",
-            "Text": "Progression!",
+            "Text": "A sense of purpose!",
             "Position": {
                 "x": 0.5,
                 "y": 0.4
             },
         },
         {
-            "Animation": "Idle",
-            "Text": "You need to level up.",
+            "Animation": "Morose",
+            "Text": "A number that goes up!",
         },
         {
             "Animation": "Mad",
-            "Text": "Upgrade!",
+            "Text": "A bar that fills up!",
+            "Position": {
+                "x": 0.5,
+                "y": 0.4
+            },
+        },
+        {
+            "Animation": "Happy",
+            "Text": "THAT's what makes a good video game.",
             "Position": {
                 "x": 0.5,
                 "y": 0.4

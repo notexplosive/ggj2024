@@ -14,17 +14,17 @@
             "Animation": "Blink",
         },
         {
-            "Animation": "Sad",
-            "Text": "I know, it's a little bland right now."
-        },
-        {
-            "Animation": "None",
-            "Text": "Walking around an empty field...",
+            "Animation": "Idle",
+            "Text": "It needs....",
+            "Position": {
+                "x": 0.6,
+                "y": 0.5
+            },
             "Tilt": 0.3
         },
         {
             "Animation": "Focused",
-            "Text": "We need something to do.",
+            "Text": "...something to do.",
             "Tilt": -0.3
         },
         {

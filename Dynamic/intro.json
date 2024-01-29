@@ -61,29 +61,24 @@
             },
         },
         {
-            "Text": "There is no Game.",
+            "Text": "It's not ready yet.",
             "Animation": "Sad",
-            "Tilt": 0
-        },
-        {
-            "Animation": "Blink",
-            "Tilt": 0
-        },
-        {
-            "Text": "Well... at least not yet.",
-            "Animation": "Sad",
-            "Tilt": 0.25,
+            "Tilt": 0,
             "Position": {
                 "x": 0.45,
                 "y": 0.5
             },
         },
         {
+            "Animation": "Blink",
+            "Tilt": 0
+        },
+        {
             "Text": "I can show you what I have so far!",
             "Animation": "Morose",
             "Position": {
-                "x": 0.4,
-                "y": 0.5
+                "x": 0.5,
+                "y": 0.4
             },
         },
         {

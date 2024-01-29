@@ -14,14 +14,13 @@ public class EnemyWaves
     {
         for (var level = 1; level <= 10; level++)
         {
-            var shortDuration = 5f * level;
-            var mediumDuration = 10f * level;
-            var longerDuration = 15 * level;
+            var shortDuration = 5f;
+            var mediumDuration = 10f;
+            var longerDuration = 15;
 
             var few = 5 * level;
             var several = 10 * level;
-            var severalMore = 15 * level;
-            var many = 20 * level;
+            var many = 50 * level;
 
             _waves.Add(
                 new EnemyWave(
@@ -50,13 +49,14 @@ public class EnemyWaves
 
             _waves.Add(
                 new EnemyWave(
-                    Trickle(world, camera, EntityTemplate.BigEnemy, few, mediumDuration),
+                    Trickle(world, camera, EntityTemplate.BigEnemy, several, mediumDuration),
                     new WaitSecondsTween(longerDuration)
                 ));
 
             _waves.Add(
                 new EnemyWave(
                     Burst(world, camera, EntityTemplate.Enemy, many),
+                    Trickle(world, camera, EntityTemplate.Enemy, many, longerDuration),
                     new WaitSecondsTween(longerDuration)
                 ));
 
@@ -65,6 +65,7 @@ public class EnemyWaves
                     Burst(world, camera, EntityTemplate.Enemy, several),
                     Trickle(world, camera, EntityTemplate.BigEnemy, few, shortDuration),
                     Burst(world, camera, EntityTemplate.FastEnemy, many),
+                    Trickle(world, camera, EntityTemplate.FastEnemy, many, shortDuration),
                     new WaitSecondsTween(mediumDuration)
                 ));
         }
